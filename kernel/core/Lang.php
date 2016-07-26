@@ -40,7 +40,7 @@
      * Language Manager Class
      *
      * @package		STC
-     * @subpackage	Librairies
+     * @subpackage	Libraries
      * @category    Language
      * @author		Nana Axel
      */
@@ -72,7 +72,6 @@
          * @return void
          */
         public function __construct($default_language = null) {
-
             $this->language = config_item('default_lang');
 
             if (isset($default_language) && !empty($default_language)) {
@@ -83,7 +82,6 @@
 
             // Logging Message
             log_message('info', 'Language Class Initialized');
-
         }
 
         /**
@@ -94,7 +92,6 @@
          * @throws STC_LangException
          */
         private function _load() {
-
             if (file_exists( APPPATH . 'ln/'.$this->language.'.php' )) {
                 require_once ( APPPATH . 'ln/'.$this->language.'.php' );
                 $this->langfile = $LANG;
@@ -102,11 +99,19 @@
             else {
                 throw new STC_LangException("The language file {$this->language}.php can't be located in \"".APPPATH."ln/\"", 1);
             }
-
         }
 
+        /**
+         * Translate a text using the text key
+         *
+         * @param  string  $text_key  The text key used to search for translation.
+         * @param  string  $params    Additional text to add in the translation.
+         *
+         * @return string
+         *
+         * @throws STC_LangException
+         */
         public function translate($text_key, $params = null) {
-
             if (isset($this->langfile[$text_key])) {
                 if (isset($params) && !empty($params)) {
                     $param  = (array) $params;
@@ -119,26 +124,38 @@
                     }
 
                     return  call_user_func_array('sprintf', $temp);
-                } else {
+                }
+                else {
                     return $this->langfile[$text_key];
                 }
-            } else {
+            }
+            else {
                 throw new STC_LangException("The language key \"{$text_key}\" don't exists in the language file {$this->language}.php", 1);
             }
-
         }
 
+        /**
+         * Change the current language
+         *
+         * @param  string  $new_lang  The filename (without the php extension) to load.
+         *
+         * @return object  This instance.
+         *
+         * @throws STC_LangException
+         */
         public function setLang($new_lang) {
-
             $this->language = $new_lang;
             $this->_load();
-
+            return $this;
         }
 
+        /**
+         * Return the language file currently used
+         *
+         * @return array  The array of text_key => text_translation for the current language.
+         */
         public function getLang() {
-
             return $this->langfile;
-
         }
 
     }
@@ -147,7 +164,7 @@
      * Dummy class used to throw exceptions
      *
      * @package		STC
-     * @subpackage	Librairies
+     * @subpackage	Libraries
      * @category	Language
      * @author		Nana Axel
      * @ignore
