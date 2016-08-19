@@ -43,7 +43,7 @@ require(BASEPATH."lib/Smarty/Smarty.class.php");
  * Templates Manager Class
  *
  * @package		STC
- * @subpackage	Librairies
+ * @subpackage	Libraries
  * @category    Template
  * @author		Nana Axel
  */

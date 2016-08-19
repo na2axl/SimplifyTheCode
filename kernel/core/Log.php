@@ -41,7 +41,7 @@
      *
      * @package		STC
      * @subpackage	Utilities
-     * @category    Librairy
+     * @category    Library
      * @author		Nana Axel
      */
     class STC_Log {

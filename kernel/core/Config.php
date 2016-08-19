@@ -40,8 +40,8 @@
      * Config File Manager Class
      *
      * @package		STC
-     * @subpackage	Librairies
-     * @category    Librairy
+     * @subpackage	Libraries
+     * @category    Library
      * @author		Nana Axel
      */
     class STC_Config {

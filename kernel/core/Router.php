@@ -40,7 +40,7 @@
      * Router Class
      *
      * @package		STC
-     * @subpackage	Librairies
+     * @subpackage	Libraries
      * @category    Router
      * @author		Nana Axel
      */

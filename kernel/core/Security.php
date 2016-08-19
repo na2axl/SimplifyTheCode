@@ -40,7 +40,7 @@
      * Database Manager Class
      *
      * @package		STC
-     * @subpackage	Librairies
+     * @subpackage	Libraries
      * @category    Security
      * @author		Nana Axel
      */

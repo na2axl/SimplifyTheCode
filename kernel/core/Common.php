@@ -42,7 +42,7 @@
      * A set of functions used in all the system.
      *
      * @package		STC
-     * @subpackage	Librairies
+     * @subpackage	Libraries
      * @category    Common Functions
      * @author		Nana Axel
      */
