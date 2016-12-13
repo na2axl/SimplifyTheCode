@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,12 +39,13 @@
     /**
      * Base Model Class
      *
-     * @package		STC
-     * @subpackage	Models
+     * @package     STC
+     * @subpackage  Models
      * @category    Base Model
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-     class STC_Model {
+     class STC_Model
+     {
 
         /**
          * Store the name of loaded models
@@ -56,10 +57,9 @@
 
         /**
          * Class constructor
-         *
-         * @return void
          */
-        public function __construct() {
+        public function __construct()
+        {
             log_message('info', 'Model class Initialized');
         }
 
@@ -73,7 +73,8 @@
          *
          * @return object
          */
-        public function __get($class) {
+        public function __get($class)
+        {
             $class = strtolower($class);
             return get_controller_instance()->$class;
         }
@@ -83,12 +84,12 @@
          *
          * Loads and instantiates models.
          *
-         * @param	string	$model		Model name
-         * @param	string	$name		An optional object name to assign to
-         * @param	bool	$db_conn	An optional database connection configuration to initialize
-         * @return	object
+         * @param   string  $model  Model name
+         * @param   string  $name   An optional object name to assign to
+         * @return  object
          */
-        public function load($model, $name = '') {
+        public function load($model, $name = NULL)
+        {
             if (empty($model)) {
                 return $this;
             } elseif (is_array($model)) {
@@ -119,27 +120,28 @@
 
             $STC =& get_controller_instance();
             if (isset($STC->$name)) {
-                throw new RuntimeException('The model name you are loading is the name of a resource that is already being used: '.$name);
+                throw new RuntimeException('The model name you are loading is the name of a resource that is already being used: ' . $name);
             }
 
             $model = ucfirst(strtolower($model));
-            $class = 'MDL_'.$model;
+            $class = 'MDL_' . $model;
             if ( ! class_exists($class)) {
-                if ( ! file_exists(APPPATH.'mdl/'.$path.$model.'.php')) {
-                    throw new RuntimeException('Unable to locate the model you have specified: '.$model);
+                if ( ! file_exists(make_path(array(APPPATH, 'mdl', $path, $model . '.php')))) {
+                    throw new RuntimeException('Unable to locate the model you have specified: ' . $model);
                 }
 
-                require_once(APPPATH.'mdl/'.$path.$model.'.php');
+                require_once (make_path(array(APPPATH, 'mdl', $path, $model . '.php')));
 
                 if ( ! class_exists($class, FALSE)) {
-                    throw new RuntimeException(APPPATH."mdl/".$path.$model.".php exists, but doesn't declare class ".$model);
+                    throw new RuntimeException(make_path(array(APPPATH, 'mdl', $path, $model . '.php')) . " exists, but doesn't declare class {$model}");
                 }
             } elseif ( ! is_subclass_of($class, 'STC_Model')) {
-                throw new RuntimeException("Class ".$model." already exists and doesn't extend STC_Model");
+                throw new RuntimeException("Class {$class} already exists and doesn't extend STC_Model");
             }
 
             $this->_stc_models[] = $name;
             $STC->$name = new $class();
+
             return $this;
         }
 

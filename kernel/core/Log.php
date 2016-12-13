@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,91 +39,83 @@
     /**
      * Logging Class
      *
-     * @package		STC
-     * @subpackage	Utilities
-     * @category    Library
-     * @author		Nana Axel
+     * @package     STC
+     * @subpackage  Utilities
+     * @category    Logging
+     * @author      Nana Axel
      */
-    class STC_Log {
+    class STC_Log
+    {
 
         /**
-        * Path to save log files
-        *
-        * @var string
-        * @access protected
-        */
+         * Path to save log files
+         * @var string
+         * @access protected
+         */
         protected $_log_path;
 
         /**
-        * File permissions
-        *
-        * @var	int
-        * @access protected
-        */
+         * File permissions
+         * @var	int
+         * @access protected
+         */
         protected $_file_permissions = 0644;
 
         /**
-        * Level of logging
-        *
-        * @var int
-        * @access protected
-        */
+         * Level of logging
+         * @var int
+         * @access protected
+         */
         protected $_threshold = 1;
 
         /**
-        * Array of threshold levels to log
-        *
-        * @var array
-        * @access protected
-        */
+         * Array of threshold levels to log
+         * @var array
+         * @access protected
+         */
         protected $_threshold_array = array();
 
         /**
-        * Format of timestamp for log files
-        *
-        * @var string
-        * @access protected
-        */
+         * Format of timestamp for log files
+         * @var string
+         * @access protected
+         */
         protected $_date_fmt = 'Y-m-d H:i:s';
 
         /**
-        * Filename extension
-        *
-        * @var	string
-        * @access protected
-        */
+         * Filename extension
+         * @var	string
+         * @access protected
+         */
         protected $_file_ext;
 
         /**
-        * Whether or not the logger can write to the log files
-        *
-        * @var bool
-        * @access protected
-        */
+         * Whether or not the logger can write to the log files
+         * @var bool
+         * @access protected
+         */
         protected $_enabled = TRUE;
 
         /**
-        * Predefined logging levels
-        *
-        * @var array
-        * @access protected
-        */
+         * Predefined logging levels
+         * @var array
+         * @access protected
+         */
         protected $_levels = array('ERROR' => 1, 'DEBUG' => 2, 'INFO' => 3, 'ALL' => 4);
 
         // --------------------------------------------------------------------
 
         /**
          * Class __constructor
-         *
-         * @return	void
          */
-        public function __construct() {
+        public function __construct()
+        {
             $config =& get_config();
 
-            $this->_log_path = ($config['log_path'] !== '') ? $config['log_path'] : APPPATH.'logs/';
-            $this->_file_ext = 'php';
+            $this->_log_path = ($config['log_path'] !== '') ? $config['log_path'] : APPPATH . 'logs' . DIRECTORY_SEPARATOR;
+            $this->_file_ext = ($config['log_file_extension'] !== '') ? $config['log_file_extension'] : 'php';
 
-            file_exists($this->_log_path) OR mkdir($this->_log_path, 0755, TRUE);
+            file_exists($this->_log_path) OR @mkdir($this->_log_path, 0755, TRUE);
 
             if ( ! is_dir($this->_log_path) OR ! is_really_writable($this->_log_path)) {
                 $this->_enabled = FALSE;
@@ -147,15 +139,16 @@
         }
 
         /**
-        * Write Log File
-        *
-        * Generally this function will be called using the global log_message() function
-        *
-        * @param	string	the error level: 'error', 'debug' or 'info'
-        * @param	string	the error message
-        * @return	bool
-        */
-        public function write_log($level, $msg) {
+         * Write Log File
+         *
+         * Generally this function will be called using the global log_message() function
+         *
+         * @param	string	the error level: 'error', 'debug' or 'info'
+         * @param	string	the error message
+         * @return	bool
+         */
+        public function write_log($level, $msg)
+        {
             if ($this->_enabled === FALSE) {
                 return FALSE;
             }
@@ -192,7 +185,7 @@
                 $date = date($this->_date_fmt);
             }
 
-            $message .= $level.' - '.$date.' --> '.$msg."\n";
+            $message .= $level . "\t-\t" . $date . "\t-->\t" . $msg . "\n";
 
             flock($fp, LOCK_EX);
 

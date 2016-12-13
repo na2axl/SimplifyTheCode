@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,66 +39,76 @@
     /**
      * Benchmark Class
      *
-     * @package		STC
-     * @subpackage	Utilities
+     * @package     STC
+     * @subpackage  Utilities
      * @category    Benchmark
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_Benchmark {
+    class STC_Benchmark
+    {
 
         /**
          * The benchmark
          * @var array
          * @access private
          */
-        private $marker = array( ) ;
+        private static $marker = array( ) ;
 
         /**
          * Add a benchmark point.
-         *
-         * @param  string  $name  The name of the bechmark point
-         *
+         * @param  string  $name  The name of the benchmark point
          * @return void
          */
-        public function mark( $name ) {
-            $this->marker[$name] = microtime( ) ;
+        public function mark( $name )
+        {
+            self::$marker[$name]['e'] = microtime( ) ;
+            self::$marker[$name]['m'] = memory_get_usage( ) ;
         }
 
         /**
-         * Calculate the elapsed time between two
-         * benchmark points.
-         *
-         * @param  string  $point1    The name of the first bechmark point
-         * @param  string  $point2    The name of the second bechmark point
+         * Calculate the elapsed time between two benchmark points.
+         * @param  string  $point1    The name of the first benchmark point
+         * @param  string  $point2    The name of the second benchmark point
          * @param  int     $decimals
-         *
          * @return mixed
          */
-        public function elapsed_time( $point1 = '', $point2 = '', $decimals = 4 ) {
-            if ( $point1 == '' ) {
-                return '{elapsed_time}' ;
+        public function elapsed_time( $point1 = NULL, $point2 = NULL, $decimals = 4 )
+        {
+            if ( $point1 === NULL || !array_key_exists( $point1, self::$marker ) ) {
+                return 0 ;
             }
-            if ( !isset ( $this->marker[$point1] )) {
-                return '' ;
+
+            if ( !array_key_exists( $point2, self::$marker ) ) {
+                $this->mark( $point2 );
             }
-            if ( !isset ( $this->marker[$point2] )) {
-                $this->marker[$point2] = microtime( ) ;
-            }
-            list( $sm, $ss ) = explode( ' ', $this->marker[$point1] ) ;
-            list( $em, $es ) = explode( ' ', $this->marker[$point2] ) ;
+
+            list( $sm, $ss ) = explode( ' ', self::$marker[$point1]['e'] ) ;
+            list( $em, $es ) = explode( ' ', self::$marker[$point2]['e'] ) ;
 
             return number_format( ( $em + $es ) - ( $sm + $ss ), $decimals ) ;
         }
 
         /**
          * Calculate the memory usage of a benchmark point
-         *
-         * @return string
-         * @ignore
-         * TODO: Find a way to calculate the memory usage...
+         * @param  string  $point1    The name of the first benchmark point
+         * @param  string  $point2    The name of the second benchmark point
+         * @param  int     $decimals
+         * @return mixed
          */
-        public function memory_usage( ) {
-            return '{memory_usage}' ;
+        public function memory_usage( $point1 = NULL, $point2 = NULL, $decimals = 4 )
+        {
+            if ( $point1 === NULL || !array_key_exists( $point1, self::$marker ) ) {
+                return 0 ;
+            }
+
+            if ( !array_key_exists( $point2, self::$marker ) ) {
+                $this->mark( $point2 );
+            }
+
+            $sm = self::$marker[$point1]['m'] ;
+            $em = self::$marker[$point2]['m'] ;
+
+            return number_format( $em - $sm , $decimals ) ;
         }
 
     }

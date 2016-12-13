@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package    STC
+     * @author     Nana Axel
+     * @copyright  Copyright (c) 2015 - 2016, Centers Technologies
+     * @license    http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,16 +39,16 @@
     /**
      * Language Manager Class
      *
-     * @package		STC
-     * @subpackage	Libraries
+     * @package     STC
+     * @subpackage  Libraries
      * @category    Language
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_Lang {
+    class STC_Lang
+    {
 
         /**
          * The language used for translations
-         *
          * @var string
          * @access private
          */
@@ -56,7 +56,6 @@
 
         /**
          * An array of key-translation associations
-         *
          * @var array
          * @access private
          */
@@ -64,17 +63,16 @@
 
         /**
          * Class __constructor
-         *
          * @param  string  $default_language  The default language to use for translations.
          *                                    If no language is set, it will be the default language
          *                                    in your config file which will be loaded.
-         *
-         * @return void
+         * @throws Exception
          */
-        public function __construct($default_language = null) {
+        public function __construct($default_language = NULL)
+        {
             $this->language = config_item('default_lang');
 
-            if (isset($default_language) && !empty($default_language)) {
+            if (NULL !== $default_language && $default_language !== '') {
                 $this->language = $default_language;
             }
 
@@ -86,34 +84,38 @@
 
         /**
          * Load a language file
-         *
          * @return void
-         *
-         * @throws STC_LangException
+         * @throws Exception
          */
-        private function _load() {
-            if (file_exists( APPPATH . 'ln/'.$this->language.'.php' )) {
-                require_once ( APPPATH . 'ln/'.$this->language.'.php' );
-                $this->langfile = $LANG;
+        private function _load()
+        {
+            if (file_exists( APPPATH . 'ln' . DIRECTORY_SEPARATOR . $this->language . '.php' )) {
+                require APPPATH . 'ln' . DIRECTORY_SEPARATOR . $this->language . '.php';
+                if (isset($lang) && is_array($lang)) {
+                    $this->langfile = $lang;
+                    unset($lang);
+                    trigger_event_callbacks('lang', 'change', array($this->language));
+                }
+                else {
+                    show_error("The language file \"{$this->language}.php\" doesn't contain the variable \"\$lang\"");
+                }
             }
             else {
-                throw new STC_LangException("The language file {$this->language}.php can't be located in \"".APPPATH."ln/\"", 1);
+                show_error("The language file \"{$this->language}.php\" can't be located in \"".APPPATH."ln/\"");
             }
         }
 
         /**
          * Translate a text using the text key
-         *
          * @param  string  $text_key  The text key used to search for translation.
-         * @param  string  $params    Additional text to add in the translation.
-         *
+         * @param  array   $params    Additional text to add in the translation.
          * @return string
-         *
-         * @throws STC_LangException
+         * @throws Exception
          */
-        public function translate($text_key, $params = null) {
-            if (isset($this->langfile[$text_key])) {
-                if (isset($params) && !empty($params)) {
+        public function translate($text_key, array $params = array())
+        {
+            if (array_key_exists($text_key, $this->langfile)) {
+                if (count($params) > 0) {
                     $param  = (array) $params;
                     $temp   = array();
 
@@ -130,20 +132,18 @@
                 }
             }
             else {
-                throw new STC_LangException("The language key \"{$text_key}\" don't exists in the language file {$this->language}.php", 1);
+                throw new RuntimeException("The language key \"{$text_key}\" don't exists in the language file {$this->language}.php");
             }
         }
 
         /**
          * Change the current language
-         *
-         * @param  string  $new_lang  The filename (without the php extension) to load.
-         *
-         * @return object  This instance.
-         *
-         * @throws STC_LangException
+         * @param  string    $new_lang  The filename (without the php extension) to load.
+         * @return STC_Lang  This instance.
+         * @throws Exception
          */
-        public function setLang($new_lang) {
+        public function setLang($new_lang)
+        {
             $this->language = $new_lang;
             $this->_load();
             return $this;
@@ -151,22 +151,20 @@
 
         /**
          * Return the language file currently used
-         *
          * @return array  The array of text_key => text_translation for the current language.
          */
-        public function getLang() {
+        public function getLang()
+        {
             return $this->langfile;
         }
 
-    }
+        /**
+         * Return the language id currently used
+         * @return array  The array of text_key => text_translation for the current language.
+         */
+        public function getLangID()
+        {
+            return $this->language;
+        }
 
-    /**
-     * Dummy class used to throw exceptions
-     *
-     * @package		STC
-     * @subpackage	Libraries
-     * @category	Language
-     * @author		Nana Axel
-     * @ignore
-     */
-    class STC_LangException extends Exception {}
+    }

@@ -27,89 +27,127 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
     defined('BASEPATH') OR exit('No direct script access allowed');
 
     /**
-     * Database Manager Class
+     * Security Class
      *
-     * @package		STC
-     * @subpackage	Libraries
+     * @package     STC
+     * @subpackage  Libraries
      * @category    Security
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_Security {
+    class STC_Security
+    {
 
         /**
-        * List of sanitize filename strings
-        *
-        * @var	array
-        */
-        public $filename_bad_chars =	array(
+         * List of sanitize filename strings
+         *
+         * @var array
+         */
+        public $filename_bad_chars =    array(
             '../', '<!--', '-->', '<', '>',
             "'", '"', '&', '$', '#',
             '{', '}', '[', ']', '=',
             ';', '?', '%20', '%22',
-            '%3c',		// <
-            '%253c',	// <
-            '%3e',		// >
-            '%0e',		// >
-            '%28',		// (
-            '%29',		// )
-            '%2528',	// (
-            '%26',		// &
-            '%24',		// $
-            '%3f',		// ?
-            '%3b',		// ;
-            '%3d'		// =
+            '%3c',      // <
+            '%253c',    // <
+            '%3e',      // >
+            '%0e',      // >
+            '%28',      // (
+            '%29',      // )
+            '%2528',    // (
+            '%26',      // &
+            '%24',      // $
+            '%3f',      // ?
+            '%3b',      // ;
+            '%3d'       // =
         );
 
         /**
-        * Character set
-        *
-        * Will be overridden by the constructor.
-        *
-        * @var	string
-        */
+         * Character set
+         *
+         * Will be overridden by the constructor.
+         *
+         * @var string
+         */
         public $charset = 'UTF-8';
 
         /**
-        * XSS Hash
-        *
-        * Random Hash for protecting URLs.
-        *
-        * @var	string
-        */
+         * XSS Hash
+         *
+         * Random Hash for protecting URLs.
+         *
+         * @var string
+         */
         protected $_xss_hash;
 
         /**
-        * List of never allowed strings
-        *
-        * @var	array
-        */
-        protected $_never_allowed_str =	array(
-            'document.cookie'	=> '[removed]',
-            'document.write'	=> '[removed]',
-            '.parentNode'		=> '[removed]',
-            '.innerHTML'		=> '[removed]',
-            '-moz-binding'		=> '[removed]',
-            '<!--'				=> '&lt;!--',
-            '-->'				=> '--&gt;',
-            '<![CDATA['			=> '&lt;![CDATA[',
-            '<comment>'			=> '&lt;comment&gt;'
+         * CSRF Hash
+         *
+         * Random hash for Cross Site Request Forgery protection cookie
+         *
+         * @var string
+         */
+        protected $_csrf_hash;
+
+        /**
+         * CSRF Expire time
+         *
+         * Expiration time for Cross Site Request Forgery protection cookie.
+         * Defaults to two hours (in seconds).
+         *
+         * @var int
+         */
+        protected $_csrf_expire =   7200;
+
+        /**
+         * CSRF Token name
+         *
+         * Token name for Cross Site Request Forgery protection cookie.
+         *
+         * @var string
+         */
+        protected $_csrf_token_name =   'stc_csrf_token';
+
+        /**
+         * CSRF Cookie name
+         *
+         * Cookie name for Cross Site Request Forgery protection cookie.
+         *
+         * @var string
+         */
+        protected $_csrf_cookie_name =  'stc_csrf_token';
+
+        /**
+         * List of never allowed strings
+         *
+         * @var array
+         */
+        protected $_never_allowed_str = array(
+            'document.cookie'   => '[removed]',
+            'document.write'    => '[removed]',
+            '.parentNode'       => '[removed]',
+            '.innerHTML'        => '[removed]',
+            '-moz-binding'      => '[removed]',
+            '<!--'              => '&lt;!--',
+            '-->'               => '--&gt;',
+            '<![CDATA['         => '&lt;![CDATA[',
+            '<comment>'         => '&lt;comment&gt;'
         );
 
         /**
-        * List of never allowed regex replacements
-        *
-        * @var	array
-        */
+         * List of never allowed regex replacements
+         *
+         * @var array
+         */
         protected $_never_allowed_regex = array(
             'javascript\s*:',
             '(document|(document\.)?window)\.(location|on\w*)',
@@ -123,42 +161,189 @@
         );
 
         /**
-        * Class constructor
-        *
-        * @return	void
-        */
-        public function __construct() {
+         * Class constructor
+         *
+         * @return  void
+         */
+        public function __construct()
+        {
+            // Is CSRF protection enabled?
+            if (config_item('csrf_protection'))
+            {
+                // CSRF config
+                foreach (array('csrf_expire', 'csrf_token_name', 'csrf_cookie_name') as $key)
+                {
+                    if (NULL !== ($val = config_item($key)))
+                    {
+                        $this->{'_'.$key} = $val;
+                    }
+                }
+
+                // Append application specific cookie prefix
+                if ($cookie_prefix = config_item('cookie_prefix'))
+                {
+                    $this->_csrf_cookie_name = $cookie_prefix . $this->_csrf_cookie_name;
+                }
+
+                // Set the CSRF hash
+                $this->_csrf_set_hash();
+            }
+
             $this->charset = strtoupper(config_item('charset'));
+
+            log_message('info', 'Security Class Initialized');
         }
 
         // --------------------------------------------------------------------
 
         /**
-        * XSS Clean
-        *
-        * Sanitizes data so that Cross Site Scripting Hacks can be
-        * prevented.  This method does a fair amount of work but
-        * it is extremely thorough, designed to prevent even the
-        * most obscure XSS attempts.  Nothing is ever 100% foolproof,
-        * of course, but I haven't been able to get anything passed
-        * the filter.
-        *
-        * Note: Should only be used to deal with data upon submission.
-        *	 It's not something that should be used for general
-        *	 runtime processing.
-        *
-        * @link	http://channel.bitflux.ch/wiki/XSS_Prevention
-        * 		Based in part on some code and ideas from Bitflux.
-        *
-        * @link	http://ha.ckers.org/xss.html
-        * 		To help develop this script I used this great list of
-        *		vulnerabilities along with a few other hacks I've
-        *		harvested from examining vulnerabilities in other programs.
-        *
-        * @param	string|string[]	$str		Input data
-        * @param 	bool		$is_image	Whether the input is an image
-        * @return	string
-        */
+         * CSRF Verify
+         *
+         * @return  STC_Security
+         */
+        public function csrf_verify()
+        {
+            // If it's not a POST request we will set the CSRF cookie
+            if (strtoupper($_SERVER['REQUEST_METHOD']) !== 'POST')
+            {
+                return $this->csrf_set_cookie();
+            }
+
+            // Check if URI has been whitelisted from CSRF checks
+            if ($exclude_uris = config_item('csrf_exclude_uris'))
+            {
+                $uri = load_class('Router');
+                foreach ($exclude_uris as $excluded)
+                {
+                    if (preg_match('#^'.$excluded.'$#i'.(UTF8_ENABLED ? 'u' : ''), $uri->get_uri()))
+                    {
+                        return $this;
+                    }
+                }
+            }
+
+            // Do the tokens exist in both the _POST and _COOKIE arrays?
+            if ( ! isset($_POST[$this->_csrf_token_name], $_COOKIE[$this->_csrf_cookie_name])
+                OR $_POST[$this->_csrf_token_name] !== $_COOKIE[$this->_csrf_cookie_name]) // Do the tokens match?
+            {
+                $this->csrf_show_error();
+            }
+
+            // We kill this since we're done and we don't want to polute the _POST array
+            unset($_POST[$this->_csrf_token_name]);
+
+            // Regenerate on every submission?
+            if (config_item('csrf_regenerate'))
+            {
+                // Nothing should last forever
+                unset($_COOKIE[$this->_csrf_cookie_name]);
+                $this->_csrf_hash = NULL;
+            }
+
+            $this->_csrf_set_hash();
+            $this->csrf_set_cookie();
+
+            log_message('info', 'CSRF token verified');
+            return $this;
+        }
+
+        // --------------------------------------------------------------------
+
+        /**
+         * CSRF Set Cookie
+         *
+         * @codeCoverageIgnore
+         * @return  STC_Security
+         */
+        public function csrf_set_cookie()
+        {
+            $expire = time() + $this->_csrf_expire;
+            $secure_cookie = (bool) config_item('cookie_secure');
+
+            if ($secure_cookie && ! is_https())
+            {
+                return FALSE;
+            }
+
+            setcookie(
+                $this->_csrf_cookie_name,
+                $this->_csrf_hash,
+                $expire,
+                config_item('cookie_path'),
+                config_item('cookie_domain'),
+                $secure_cookie,
+                config_item('cookie_httponly')
+            );
+
+            log_message('info', 'CSRF cookie created');
+
+            return $this;
+        }
+
+        // --------------------------------------------------------------------
+
+        /**
+         * Show CSRF Error
+         *
+         * @return  void
+         */
+        public function csrf_show_error()
+        {
+            show_error('The action you have requested is not allowed.', 403);
+        }
+
+        // --------------------------------------------------------------------
+
+        /**
+         * Get CSRF Hash
+         *
+         * @see     STC_Security::$_csrf_hash
+         * @return  string  CSRF hash
+         */
+        public function get_csrf_hash()
+        {
+            return $this->_csrf_hash;
+        }
+
+        // --------------------------------------------------------------------
+
+        /**
+         * Get CSRF Token Name
+         *
+         * @see     STC_Security::$_csrf_token_name
+         * @return  string  CSRF token name
+         */
+        public function get_csrf_token_name()
+        {
+            return $this->_csrf_token_name;
+        }
+
+        /**
+         * XSS Clean
+         *
+         * Sanitizes data so that Cross Site Scripting Hacks can be
+         * prevented.  This method does a fair amount of work but
+         * it is extremely thorough, designed to prevent even the
+         * most obscure XSS attempts.  Nothing is ever 100% foolproof,
+         * of course, but I haven't been able to get anything passed
+         * the filter.
+         *
+         * Note: Should only be used to deal with data upon submission.
+         *   It's not something that should be used for general
+         *   runtime processing.
+         *
+         * @link    http://channel.bitflux.ch/wiki/XSS_Prevention
+         *      Based in part on some code and ideas from Bitflux.
+         *
+         * @link    http://ha.ckers.org/xss.html
+         *      To help develop this script I used this great list of
+         *      vulnerabilities along with a few other hacks I've
+         *      harvested from examining vulnerabilities in other programs.
+         *
+         * @param   string|string[] $str        Input data
+         * @param   bool            $is_image   Whether the input is an image
+         * @return  string
+         */
         public function xss_clean($str, $is_image = FALSE)
         {
             // Is the string an array?
@@ -175,18 +360,15 @@
             // Remove Invisible Characters
             $str = remove_invisible_characters($str);
 
-            // Remove script tags
-            $str = preg_replace('#<script>(.+)</script>#isU', '', $str);
-
             /*
-            * URL Decode
-            *
-            * Just in case stuff like this is submitted:
-            *
-            * <a href="http://%77%77%77%2E%67%6F%6F%67%6C%65%2E%63%6F%6D">Google</a>
-            *
-            * Note: Use rawurldecode() so it does not remove plus signs
-            */
+             * URL Decode
+             *
+             * Just in case stuff like this is submitted:
+             *
+             * <a href="http://%77%77%77%2E%67%6F%6F%67%6C%65%2E%63%6F%6D">Google</a>
+             *
+             * Note: Use rawurldecode() so it does not remove plus signs
+             */
             do
             {
                 $str = rawurldecode($str);
@@ -194,12 +376,12 @@
             while (preg_match('/%[0-9a-f]{2,}/i', $str));
 
             /*
-            * Convert character entities to ASCII
-            *
-            * This permits our tests below to work reliably.
-            * We only convert entities that are within tags since
-            * these are the ones that will pose security problems.
-            */
+             * Convert character entities to ASCII
+             *
+             * This permits our tests below to work reliably.
+             * We only convert entities that are within tags since
+             * these are the ones that will pose security problems.
+             */
             $str = preg_replace_callback("/[^a-z0-9>]+[a-z0-9]+=([\'\"]).*?\\1/si", array($this, '_convert_attribute'), $str);
             $str = preg_replace_callback('/<\w+.*/si', array($this, '_decode_entity'), $str);
 
@@ -207,13 +389,13 @@
             $str = remove_invisible_characters($str);
 
             /*
-            * Convert all tabs to spaces
-            *
-            * This prevents strings like this: ja	vascript
-            * NOTE: we deal with spaces between characters later.
-            * NOTE: preg_replace was found to be amazingly slow here on
-            * large blocks of data, so we use str_replace.
-            */
+             * Convert all tabs to spaces
+             *
+             * This prevents strings like this: ja  vascript
+             * NOTE: we deal with spaces between characters later.
+             * NOTE: preg_replace was found to be amazingly slow here on
+             * large blocks of data, so we use str_replace.
+             */
             $str = str_replace("\t", '    ', $str);
 
             // Capture converted string for later comparison
@@ -223,14 +405,14 @@
             $str = $this->_do_never_allowed($str);
 
             /*
-            * Makes PHP tags safe
-            *
-            * Note: XML tags are inadvertently replaced too:
-            *
-            * <?xml
-            *
-            * But it doesn't seem to pose a problem.
-            */
+             * Makes PHP tags safe
+             *
+             * Note: XML tags are inadvertently replaced too:
+             *
+             * <?xml
+             *
+             * But it doesn't seem to pose a problem.
+             */
             if ($is_image === TRUE)
             {
                 // Images have a tendency to have the PHP short opening and
@@ -244,11 +426,11 @@
             }
 
             /*
-            * Compact any exploded words
-            *
-            * This corrects words like:  j a v a s c r i p t
-            * These words are compacted back to their correct state.
-            */
+             * Compact any exploded words
+             *
+             * This corrects words like:  j a v a s c r i p t
+             * These words are compacted back to their correct state.
+             */
             $words = array(
                 'javascript', 'expression', 'vbscript', 'jscript', 'wscript',
                 'vbs', 'script', 'base64', 'applet', 'alert', 'document',
@@ -265,17 +447,17 @@
             }
 
             /*
-            * Remove disallowed Javascript in links or img tags
-            * We used to do some version comparisons and use of stripos(),
-            * but it is dog slow compared to these simplified non-capturing
-            * preg_match(), especially if the pattern exists in the string
-            *
-            * Note: It was reported that not only space characters, but all in
-            * the following pattern can be parsed as separators between a tag name
-            * and its attributes: [\d\s"\'`;,\/\=\(\x00\x0B\x09\x0C]
-            * ... however, remove_invisible_characters() above already strips the
-            * hex-encoded ones, so we'll skip them below.
-            */
+             * Remove disallowed Javascript in links or img tags
+             * We used to do some version comparisons and use of stripos(),
+             * but it is dog slow compared to these simplified non-capturing
+             * preg_match(), especially if the pattern exists in the string
+             *
+             * Note: It was reported that not only space characters, but all in
+             * the following pattern can be parsed as separators between a tag name
+             * and its attributes: [\d\s"\'`;,\/\=\(\x00\x0B\x09\x0C]
+             * ... however, remove_invisible_characters() above already strips the
+             * hex-encoded ones, so we'll skip them below.
+             */
             do
             {
                 $original = $str;
@@ -303,29 +485,29 @@
             $str = $this->_remove_evil_attributes($str, $is_image);
 
             /*
-            * Sanitize naughty HTML elements
-            *
-            * If a tag containing any of the words in the list
-            * below is found, the tag gets converted to entities.
-            *
-            * So this: <blink>
-            * Becomes: &lt;blink&gt;
-            */
+             * Sanitize naughty HTML elements
+             *
+             * If a tag containing any of the words in the list
+             * below is found, the tag gets converted to entities.
+             *
+             * So this: <blink>
+             * Becomes: &lt;blink&gt;
+             */
             $naughty = 'alert|prompt|confirm|applet|audio|basefont|base|behavior|bgsound|blink|body|embed|expression|form|frameset|frame|head|html|ilayer|iframe|input|button|select|isindex|layer|link|meta|keygen|object|plaintext|style|script|textarea|title|math|video|svg|xml|xss';
             $str = preg_replace_callback('#<(/*\s*)('.$naughty.')([^><]*)([><]*)#is', array($this, '_sanitize_naughty_html'), $str);
 
             /*
-            * Sanitize naughty scripting elements
-            *
-            * Similar to above, only instead of looking for
-            * tags it looks for PHP and JavaScript commands
-            * that are disallowed. Rather than removing the
-            * code, it simply converts the parenthesis to entities
-            * rendering the code un-executable.
-            *
-            * For example:	eval('some code')
-            * Becomes:	eval&#40;'some code'&#41;
-            */
+             * Sanitize naughty scripting elements
+             *
+             * Similar to above, only instead of looking for
+             * tags it looks for PHP and JavaScript commands
+             * that are disallowed. Rather than removing the
+             * code, it simply converts the parenthesis to entities
+             * rendering the code un-executable.
+             *
+             * For example: eval('some code')
+             * Becomes: eval&#40;'some code'&#41;
+             */
             $str = preg_replace('#(alert|prompt|confirm|cmd|passthru|eval|exec|expression|system|fopen|fsockopen|file|file_get_contents|readfile|unlink)(\s*)\((.*?)\)#si',
                         '\\1\\2&#40;\\3&#41;',
                         $str);
@@ -336,14 +518,14 @@
             $str = $this->_do_never_allowed($str);
 
             /*
-            * Images are Handled in a Special Way
-            * - Essentially, we want to know that after all of the character
-            * conversion is done whether any unwanted, likely XSS, code was found.
-            * If not, we return TRUE, as the image is clean.
-            * However, if the string post-conversion does not matched the
-            * string post-removal of XSS, then it fails, as there was unwanted XSS
-            * code found and removed/changed during processing.
-            */
+             * Images are Handled in a Special Way
+             * - Essentially, we want to know that after all of the character
+             * conversion is done whether any unwanted, likely XSS, code was found.
+             * If not, we return TRUE, as the image is clean.
+             * However, if the string post-conversion does not matched the
+             * string post-removal of XSS, then it fails, as there was unwanted XSS
+             * code found and removed/changed during processing.
+             */
             if ($is_image === TRUE)
             {
                 return ($str === $converted_string);
@@ -355,13 +537,13 @@
         // --------------------------------------------------------------------
 
         /**
-        * XSS Hash
-        *
-        * Generates the XSS hash if needed and returns it.
-        *
-        * @see		STC_Security::$_xss_hash
-        * @return	string	XSS hash
-        */
+         * XSS Hash
+         *
+         * Generates the XSS hash if needed and returns it.
+         *
+         * @see     STC_Security::$_xss_hash
+         * @return  string  XSS hash
+         */
         public function xss_hash()
         {
             if ($this->_xss_hash === NULL)
@@ -378,11 +560,11 @@
         // --------------------------------------------------------------------
 
         /**
-        * Get random bytes
-        *
-        * @param	int	$length	Output length
-        * @return	string
-        */
+         * Get random bytes
+         *
+         * @param   int $length Output length
+         * @return  string
+         */
         public function get_random_bytes($length)
         {
             if (empty($length) OR ! ctype_digit((string) $length))
@@ -420,22 +602,22 @@
         // --------------------------------------------------------------------
 
         /**
-        * HTML Entities Decode
-        *
-        * A replacement for html_entity_decode()
-        *
-        * The reason we are not using html_entity_decode() by itself is because
-        * while it is not technically correct to leave out the semicolon
-        * at the end of an entity most browsers will still interpret the entity
-        * correctly. html_entity_decode() does not convert entities without
-        * semicolons, so we are left with our own little solution here. Bummer.
-        *
-        * @link	http://php.net/html-entity-decode
-        *
-        * @param	string	$str		Input
-        * @param	string	$charset	Character set
-        * @return	string
-        */
+         * HTML Entities Decode
+         *
+         * A replacement for html_entity_decode()
+         *
+         * The reason we are not using html_entity_decode() by itself is because
+         * while it is not technically correct to leave out the semicolon
+         * at the end of an entity most browsers will still interpret the entity
+         * correctly. html_entity_decode() does not convert entities without
+         * semicolons, so we are left with our own little solution here. Bummer.
+         *
+         * @link    http://php.net/html-entity-decode
+         *
+         * @param   string  $str        Input
+         * @param   string  $charset    Character set
+         * @return  string
+         */
         public function entity_decode($str, $charset = NULL)
         {
             if (strpos($str, '&') === FALSE)
@@ -499,18 +681,19 @@
                 );
             }
             while ($str_compare !== $str);
+
             return $str;
         }
 
         // --------------------------------------------------------------------
 
         /**
-        * Sanitize Filename
-        *
-        * @param	string	$str		Input file name
-        * @param 	bool	$relative_path	Whether to preserve paths
-        * @return	string
-        */
+         * Sanitize Filename
+         *
+         * @param   string  $str            Input file name
+         * @param   bool    $relative_path  Whether to preserve paths
+         * @return  string
+         */
         public function sanitize_filename($str, $relative_path = FALSE)
         {
             $bad = $this->filename_bad_chars;
@@ -536,11 +719,11 @@
         // ----------------------------------------------------------------
 
         /**
-        * Strip Image Tags
-        *
-        * @param	string	$str
-        * @return	string
-        */
+         * Strip Image Tags
+         *
+         * @param    string  $str
+         * @return   string
+         */
         public function strip_image_tags($str)
         {
             return preg_replace(array('#<img[\s/]+.*?src\s*=\s*["\'](.+?)["\'].*?\>#', '#<img[\s/]+.*?src\s*=\s*(.+?).*?\>#'), '\\1', $str);
@@ -549,15 +732,15 @@
         // ----------------------------------------------------------------
 
         /**
-        * Compact Exploded Words
-        *
-        * Callback method for xss_clean() to remove whitespace from
-        * things like 'j a v a s c r i p t'.
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$matches
-        * @return	string
-        */
+         * Compact Exploded Words
+         *
+         * Callback method for xss_clean() to remove whitespace from
+         * things like 'j a v a s c r i p t'.
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $matches
+         * @return   string
+         */
         protected function _compact_exploded_words($matches)
         {
             return preg_replace('/\s+/s', '', $matches[1]).$matches[2];
@@ -566,26 +749,26 @@
         // --------------------------------------------------------------------
 
         /**
-        * Remove Evil HTML Attributes (like event handlers and style)
-        *
-        * It removes the evil attribute and either:
-        *
-        *  - Everything up until a space. For example, everything between the pipes:
-        *
-        *	<code>
-        *		<a |style=document.write('hello');alert('world');| class=link>
-        *	</code>
-        *
-        *  - Everything inside the quotes. For example, everything between the pipes:
-        *
-        *	<code>
-        *		<a |style="document.write('hello'); alert('world');"| class="link">
-        *	</code>
-        *
-        * @param	string	$str		The string to check
-        * @param	bool	$is_image	Whether the input is an image
-        * @return	string	The string with the evil attributes removed
-        */
+         * Remove Evil HTML Attributes (like event handlers and style)
+         *
+         * It removes the evil attribute and either:
+         *
+         *  - Everything up until a space. For example, everything between the pipes:
+         *
+         *   <code>
+         *       <a |style=document.write('hello');alert('world');| class=link>
+         *   </code>
+         *
+         *  - Everything inside the quotes. For example, everything between the pipes:
+         *
+         *   <code>
+         *       <a |style="document.write('hello'); alert('world');"| class="link">
+         *   </code>
+         *
+         * @param    string  $str        The string to check
+         * @param    bool    $is_image   Whether the input is an image
+         * @return   string  The string with the evil attributes removed
+         */
         protected function _remove_evil_attributes($str, $is_image)
         {
             $evil_attributes = array('on\w*', 'style', 'xmlns', 'formaction', 'form', 'xlink:href', 'FSCommand', 'seekSegmentTime');
@@ -618,14 +801,14 @@
         // --------------------------------------------------------------------
 
         /**
-        * Sanitize Naughty HTML
-        *
-        * Callback method for xss_clean() to remove naughty HTML elements.
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$matches
-        * @return	string
-        */
+         * Sanitize Naughty HTML
+         *
+         * Callback method for xss_clean() to remove naughty HTML elements.
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $matches
+         * @return   string
+         */
         protected function _sanitize_naughty_html($matches)
         {
             return '&lt;'.$matches[1].$matches[2].$matches[3] // encode opening brace
@@ -636,18 +819,18 @@
         // --------------------------------------------------------------------
 
         /**
-        * JS Link Removal
-        *
-        * Callback method for xss_clean() to sanitize links.
-        *
-        * This limits the PCRE backtracks, making it more performance friendly
-        * and prevents PREG_BACKTRACK_LIMIT_ERROR from being triggered in
-        * PHP 5.2+ on link-heavy strings.
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$match
-        * @return	string
-        */
+         * JS Link Removal
+         *
+         * Callback method for xss_clean() to sanitize links.
+         *
+         * This limits the PCRE backtracks, making it more performance friendly
+         * and prevents PREG_BACKTRACK_LIMIT_ERROR from being triggered in
+         * PHP 5.2+ on link-heavy strings.
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $match
+         * @return   string
+         */
         protected function _js_link_removal($match)
         {
             return str_replace($match[1],
@@ -661,18 +844,18 @@
         // --------------------------------------------------------------------
 
         /**
-        * JS Image Removal
-        *
-        * Callback method for xss_clean() to sanitize image tags.
-        *
-        * This limits the PCRE backtracks, making it more performance friendly
-        * and prevents PREG_BACKTRACK_LIMIT_ERROR from being triggered in
-        * PHP 5.2+ on image tag heavy strings.
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$match
-        * @return	string
-        */
+         * JS Image Removal
+         *
+         * Callback method for xss_clean() to sanitize image tags.
+         *
+         * This limits the PCRE backtracks, making it more performance friendly
+         * and prevents PREG_BACKTRACK_LIMIT_ERROR from being triggered in
+         * PHP 5.2+ on image tag heavy strings.
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $match
+         * @return   string
+         */
         protected function _js_img_removal($match)
         {
             return str_replace($match[1],
@@ -686,12 +869,12 @@
         // --------------------------------------------------------------------
 
         /**
-        * Attribute Conversion
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$match
-        * @return	string
-        */
+         * Attribute Conversion
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $match
+         * @return   string
+         */
         protected function _convert_attribute($match)
         {
             return str_replace(array('>', '<', '\\'), array('&gt;', '&lt;', '\\\\'), $match[0]);
@@ -700,15 +883,15 @@
         // --------------------------------------------------------------------
 
         /**
-        * Filter Attributes
-        *
-        * Filters tag attributes for consistency and safety.
-        *
-        * @used-by	STC_Security::_js_img_removal()
-        * @used-by	STC_Security::_js_link_removal()
-        * @param	string	$str
-        * @return	string
-        */
+         * Filter Attributes
+         *
+         * Filters tag attributes for consistency and safety.
+         *
+         * @used-by  STC_Security::_js_img_removal()
+         * @used-by  STC_Security::_js_link_removal()
+         * @param    string  $str
+         * @return   string
+         */
         protected function _filter_attributes($str)
         {
             $out = '';
@@ -726,12 +909,12 @@
         // --------------------------------------------------------------------
 
         /**
-        * HTML Entity Decode Callback
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param	array	$match
-        * @return	string
-        */
+         * HTML Entity Decode Callback
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    array   $match
+         * @return   string
+         */
         protected function _decode_entity($match)
         {
             // Protect GET variables in URLs
@@ -749,12 +932,12 @@
         // --------------------------------------------------------------------
 
         /**
-        * Do Never Allowed
-        *
-        * @used-by	STC_Security::xss_clean()
-        * @param 	string
-        * @return 	string
-        */
+         * Do Never Allowed
+         *
+         * @used-by  STC_Security::xss_clean()
+         * @param    string
+         * @return   string
+         */
         protected function _do_never_allowed($str)
         {
             $str = str_replace(array_keys($this->_never_allowed_str), $this->_never_allowed_str, $str);
@@ -770,28 +953,28 @@
         // --------------------------------------------------------------------
 
         /**
-        * Generate a captcha image
-        *
-        * @return	array
-        */
+         * Generate a captcha image
+         *
+         * @return   array
+         */
         public function generate_captcha($data = '', $img_path = '', $img_url = '', $font_path = '') {
             $defaults = array(
-                'word'		=> '',
-                'img_path'	=> '',
-                'img_url'	=> '',
-                'img_width'	=> '150',
-                'img_height'	=> '50',
-                'font_path'	=> BASEPATH.'fonts/Anorexia.ttf',
-                'expiration'	=> 7200,
-                'word_length'	=> 8,
-                'font_size'	=> 16,
-                'img_id'	=> '',
-                'pool'		=> '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                'colors'	=> array(
-                    'background'	=> array(255,255,255),
-                    'border'	=> array(153,102,102),
-                    'text'		=> array(204,153,153),
-                    'grid'		=> array(255,182,182)
+                'word'      => '',
+                'img_path'  => '',
+                'img_url'   => '',
+                'img_width' => '150',
+                'img_height'    => '50',
+                'font_path' => make_path(array(BASEPATH, 'fonts', 'Anorexia.ttf')),
+                'expiration'    => 7200,
+                'word_length'   => 8,
+                'font_size' => 16,
+                'img_id'    => '',
+                'pool'      => '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                'colors'    => array(
+                    'background'    => array(255,255,255),
+                    'border'    => array(153,102,102),
+                    'text'      => array(204,153,153),
+                    'grid'      => array(255,182,182)
                 )
             );
 
@@ -839,9 +1022,9 @@
             // -----------------------------------
             // Determine angle and position
             // -----------------------------------
-            $length	= strlen($word);
-            $angle	= ($length >= 6) ? mt_rand(-($length-6), ($length-6)) : 0;
-            $x_axis	= mt_rand(6, (360/$length)-16);
+            $length = strlen($word);
+            $angle  = ($length >= 6) ? mt_rand(-($length-6), ($length-6)) : 0;
+            $x_axis = mt_rand(6, (360/$length)-16);
             $y_axis = ($angle >= 0) ? mt_rand($img_height, $img_width) : mt_rand(6, $img_height);
 
             // Create image
@@ -868,11 +1051,11 @@
             // -----------------------------------
             //  Create the spiral pattern
             // -----------------------------------
-            $theta		= 1;
-            $thetac		= 7;
-            $radius		= 16;
-            $circles	= 20;
-            $points		= 32;
+            $theta      = 1;
+            $thetac     = 7;
+            $radius     = 16;
+            $circles    = 20;
+            $points     = 32;
 
             for ($i = 0, $cp = ($circles * $points) - 1; $i < $cp; $i++) {
                 $theta += $thetac;
@@ -935,7 +1118,45 @@
             $img = '<img '.($img_id === '' ? '' : 'id="'.$img_id.'"').' src="'.$img_url.$img_filename.'" style="width: '.$img_width.'; height: '.$img_height .'; border: 0;" alt=" " />';
             imagedestroy($im);
 
-            return array('word' => $word, 'time' => $now, 'image' => $img, 'filename' => $img_filename, 'url' => $img_url.$img_filename);
+            return array(
+                'word' => $word,
+                'time' => $now,
+                'image' => $img,
+                'filename' => $img_filename,
+                'url' => $img_url . $img_filename
+            );
+        }
+
+        // --------------------------------------------------------------------
+
+        /**
+         * Set CSRF Hash and Cookie
+         *
+         * @return  string
+         */
+        protected function _csrf_set_hash()
+        {
+            if ($this->_csrf_hash === NULL)
+            {
+                // If the cookie exists we will use its value.
+                // We don't necessarily want to regenerate it with
+                // each page load since a page could contain embedded
+                // sub-pages causing this feature to fail
+                if (isset($_COOKIE[$this->_csrf_cookie_name]) && is_string($_COOKIE[$this->_csrf_cookie_name])
+                    && preg_match('#^[0-9a-f]{32}$#iS', $_COOKIE[$this->_csrf_cookie_name]) === 1)
+                {
+                    return $this->_csrf_hash = $_COOKIE[$this->_csrf_cookie_name];
+                }
+
+                $rand = $this->get_random_bytes(16);
+                $this->_csrf_hash = ($rand === FALSE)
+                    ? md5(uniqid(mt_rand(), TRUE))
+                    : bin2hex($rand);
+            }
+
+            $this->csrf_set_cookie();
+
+            return $this->_csrf_hash;
         }
 
     }

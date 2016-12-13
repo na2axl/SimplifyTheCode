@@ -30,7 +30,7 @@
      * Exemple: mysql.example.com
      *
      */
-    $config['db_server'] = '127.0.0.1';
+    $config['db_server'] = 'localhost';
 
     /*
      *----------------------------------------------------------------------
@@ -60,7 +60,7 @@
      * This is the name of your database.
      *
      */
-    $config['db_name'] = '';
+    $config['db_name'] = 'stc';
 
     /*
      *----------------------------------------------------------------------
@@ -107,38 +107,199 @@
 
     /*
      *----------------------------------------------------------------------
+     * ENABLE QUERY STRINGS
+     *----------------------------------------------------------------------
+     *
+     * Activate/Deactivate the use of query strings in urls.
+     *
+     */
+    $config['enable_query_strings'] = FALSE;
+
+    /*
+     *----------------------------------------------------------------------
      * MESSAGES LOGGING
      *----------------------------------------------------------------------
      *
      * Activate/Deactivate the logging of internal message and events of STC.
      *
      */
-    $config['enable_logging'] = FALSE;
+    $config['enable_logging'] = TRUE;
 
     /*
      *----------------------------------------------------------------------
      * LOG PATH
      *----------------------------------------------------------------------
      *
-     * This the path to the folder who stores logging files.
+     * This is the path to the folder who stores logging files. Ignore to use
+     * the default folder.
      *
      */
     $config['log_path'] = '';
 
+    /*
+     *----------------------------------------------------------------------
+     * LOG LEVEL
+     *----------------------------------------------------------------------
+     *
+     * This is the level of events to log. Possible values are:
+     *  - 1 (ERROR)
+     *  - 2 (DEBUG)
+     *  - 3 (INFO)
+     *  - 4 (ALL)
+     *
+     */
     $config['log_level'] = 4;
 
+    /*
+     *----------------------------------------------------------------------
+     * LOG FILE PERMISSIONS
+     *----------------------------------------------------------------------
+     *
+     * This is the file permission to use when STC create a log file.
+     *
+     */
     $config['log_file_permissions'] = 0644;
 
+    /*
+     *----------------------------------------------------------------------
+     * LOG FILE EXTENSION
+     *----------------------------------------------------------------------
+     *
+     * This is the file extension of the log file.
+     *
+     */
+    $config['log_file_extension'] = 'log';
+
+    /*
+     *----------------------------------------------------------------------
+     * LOG DATE FORMAT
+     *----------------------------------------------------------------------
+     *
+     * This is the date format to use when logging an event.
+     *
+     */
     $config['log_date_format'] = 'Y-m-d H:i:s';
 
     /*
      *----------------------------------------------------------------------
-     * CONTROLLER INITIALIZATION CALLBACKS
+     * COOKIE PATH
      *----------------------------------------------------------------------
      *
-     * This is an array of functions's names that will be called just after
-     * the initialization of the main controller. Note that these functions
-     * have one parameter which represent the main controller instance.
+     * This is the path used when writing and reading cookies.
      *
      */
-    $config['on_init_controller'] = array();
+    $config['cookie_path'] = '/';
+
+    /*
+     *----------------------------------------------------------------------
+     * COOKIE DOMAIN
+     *----------------------------------------------------------------------
+     *
+     * This is the domain to use when writing and reading cookies.
+     * Ex: example.com
+     *
+     */
+    $config['cookie_domain'] = '';
+
+    /*
+     *----------------------------------------------------------------------
+     * COOKIE HTTP ONLY
+     *----------------------------------------------------------------------
+     *
+     * This set if cookies have to be used only for HTTP connections, no
+     * Javascript.
+     *
+     */
+    $config['cookie_httponly'] = FALSE;
+
+    /*
+     *----------------------------------------------------------------------
+     * COOKIE SECURE
+     *----------------------------------------------------------------------
+     *
+     * This set if cookies are secured through HTTPS.
+     *
+     */
+
+    $config['cookie_secure'] = ( 'https' === parse_url( base_url(), PHP_URL_SCHEME ) );
+
+    /*
+     *----------------------------------------------------------------------
+     * COOKIE PREFIX
+     *----------------------------------------------------------------------
+     *
+     * This is the prefix used for cookies' names.
+     *
+     */
+    $config['cookie_prefix'] = 'stc_';
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF PROTECTION
+     *----------------------------------------------------------------------
+     *
+     * This set if cookies are under CSRF protection.
+     *
+     */
+    $config['csrf_protection'] = TRUE;
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF EXPIRE
+     *----------------------------------------------------------------------
+     *
+     * This is the time interval to refresh the CSRF protection token.
+     *
+     */
+    $config['csrf_expire'] = 0;
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF TOKEN NAME
+     *----------------------------------------------------------------------
+     *
+     * This is the name of CSRF token in the $_POST array.
+     *
+     */
+    $config['csrf_token_name'] = 'csrf_token';
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF COOKIE NAME
+     *----------------------------------------------------------------------
+     *
+     * This is the name of CSRF token ine the $_COOKIE array.
+     *
+     */
+    $config['csrf_cookie_name'] = 'csrf_token';
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF EXCLUDE URIs
+     *----------------------------------------------------------------------
+     *
+     * This is the list of uris to exclude from CSRF token check.
+     *
+     */
+    $config['csrf_exclude_uris'] = array();
+
+    /*
+     *----------------------------------------------------------------------
+     * CSRF REGENERATE
+     *----------------------------------------------------------------------
+     *
+     * Activate/Deactivate the regeneration of the CSRF token on each request.
+     *
+     */
+    $config['csrf_regenerate'] = TRUE;
+
+    /*
+     *----------------------------------------------------------------------
+     * CUSTOM CONFIG VALUES
+     *----------------------------------------------------------------------
+     *
+     * You can set your own configuration values by following this example.
+     *
+     */
+    // $config['your_config_key'] = 'your_value';
+    $config['assets_url'] = $config['base_url'] . 'assets/';

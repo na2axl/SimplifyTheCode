@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Welcome</title>
+        <title>{$app_name}</title>
         <style type="text/css">
 
             ::selection { background-color: #E13300; color: white; }
@@ -70,8 +70,10 @@
     </head>
     <body>
     	<div id="container">
-            <h1>Welcome to <b>SimplifyTheCode</b></h1>
-            <p></p>
+            <h1>{'welcome'|translate}</h1>
+            <p style="font-style: italic; text-align: center; font-size: 0.75em;">{'welcome_info'|translate:[$elapsed_time,$memory_usage]}</p>
+            <p><a href="{$app_base_url}lang/fr/{$this_page_route}" title="Francais">Francais</a></p>
+            <p><a href="{$app_base_url}lang/en/{$this_page_route}" title="English">English</a></p>
         </div>
     </body>
 </html>

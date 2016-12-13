@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -50,7 +50,7 @@
      *
      * @var string
      */
-    define( 'STC_VERSION', '1.0.0' );
+    define( 'STC_VERSION', '2.1.0' );
 
     // --------------------------------------------------------------------
     // Loading user session
@@ -60,17 +60,22 @@
     // --------------------------------------------------------------------
     // Loading global functions
     // --------------------------------------------------------------------
-    require_once ( BASEPATH . 'core/Common.php' );
+    require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Common.php';
 
     // --------------------------------------------------------------------
     // Loading application functions
     // --------------------------------------------------------------------
-    require_once ( APPPATH . 'inc/common.php' );
+    require_once APPPATH . 'inc' . DIRECTORY_SEPARATOR . 'common.php';
 
     // --------------------------------------------------------------------
     // Loading application routes
     // --------------------------------------------------------------------
-    require_once ( APPPATH . 'inc/routes.php' );
+    require_once APPPATH . 'inc' . DIRECTORY_SEPARATOR . 'routes.php';
+
+    // --------------------------------------------------------------------
+    // Loading application events
+    // --------------------------------------------------------------------
+    require_once APPPATH . 'inc' . DIRECTORY_SEPARATOR . 'events.php';
 
     // --------------------------------------------------------------------
     // Security issues
@@ -97,19 +102,35 @@
                 '_registered'
             );
             $_registered = ini_get('variables_order');
-            foreach (array('E' => '_ENV', 'G' => '_GET', 'P' => '_POST', 'C' => '_COOKIE', 'S' => '_SERVER') as $key => $superglobal) {
+            foreach (array('E' => '_ENV', 'G' => '_GET', 'P' => '_POST', 'C' => '_COOKIE', 'S' => '_SERVER') as $key => $super) {
                 if (strpos($_registered, $key) === FALSE) {
                     continue;
                 }
 
-                foreach (array_keys($$superglobal) as $var) {
-                    if (isset($GLOBALS[$var]) && ! in_array($var, $_protected, TRUE)) {
+                $keys = array_keys($$super);
+                foreach ($keys as $var) {
+                    if (array_key_exists($var, $GLOBALS) && ! in_array($var, $_protected, TRUE)) {
                         $GLOBALS[$var] = NULL;
                     }
                 }
             }
         }
     }
+
+    // --------------------------------------------------------------------
+    // Loading Base Controller
+    // --------------------------------------------------------------------
+    require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Controller.php';
+
+    // --------------------------------------------------------------------
+    // Loading Events Handler
+    // --------------------------------------------------------------------
+    $STC_EVT =& load_class('Events');
+
+    // --------------------------------------------------------------------
+    // Loading Configuration Manager
+    // --------------------------------------------------------------------
+    $STC_CNF =& load_class('Config');
 
     // --------------------------------------------------------------------
     // Loading Router
@@ -120,7 +141,7 @@
     // --------------------------------------------------------------------
     // Loading Benchmark
     // --------------------------------------------------------------------
-    $STC_BM  =& load_class('Benchmark');
+    $STC_BMK  =& load_class('Benchmark');
 
     // --------------------------------------------------------------------
     // Loading Template Manager
@@ -158,15 +179,16 @@
     $STC_SSS =& load_class('PHP_Globals');
 
     // --------------------------------------------------------------------
-    // Loading Base Controller
+    // Loading Upload Class
     // --------------------------------------------------------------------
-    require_once ( BASEPATH . 'core/Controller.php' );
+    $STC_UPL =& load_class('Upload');
+
 	/**
 	 * Reference to the STC_Controller method.
 	 *
 	 * Returns current STC instance object
 	 *
-	 * @return object
+	 * @return STC_Controller
 	 */
 	function &get_controller_instance() {
 		return STC_Controller::get_instance();
@@ -175,44 +197,48 @@
     // --------------------------------------------------------------------
     // Getting the requested page
     // --------------------------------------------------------------------
+    try {
+        $class   = $STC_RTR->fetch_class();
+        $method  = $STC_RTR->fetch_method();
 
-    $class   = $STC_RTR->fetch_class();
-    $method  = $STC_RTR->fetch_method();
+    	header('Content-Type: text/html; charset='.config_item('charset'));
 
-	header('Content-Type: text/html; charset='.config_item('charset'));
+        // Mark a benchmark start point
+        $STC_BMK->mark('controller_execution_( '.$class.' / '.$method.' )_start');
 
-    // Mark a benchmark start point
-    $STC_BM->mark('controller_execution_time_( '.$class.' / '.$method.' )_start');
+        include_once APPPATH . 'ctr' . DIRECTORY_SEPARATOR . $class . '.php';
+        $controller = new $class();
 
-    include_once (APPPATH.'/ctr/'.$class.'.php');
-    $thispage = new $class();
+        if (method_exists($controller, '_remap')) {
+            $controller->_remap($method, array_slice($STC_RTR->rsegments, 2));
+        }
+        else {
+            if ( ! in_array(strtolower($method), array_map('strtolower', get_class_methods($controller)), TRUE)) {
+                if ( ! empty($STC_RTR->routes['404_override'])) {
+                    $x = explode('/', $STC_RTR->routes['404_override']);
+                    $class = ucfirst($x[0]);
+                    $method = (isset($x[1]) ? $x[1] : 'index');
+                    if ( ! class_exists($class)) {
+                        if ( ! file_exists( APPPATH . 'ctr' . DIRECTORY_SEPARATOR . $class . '.php' )) {
+                            show_404();
+                        }
 
-    if (method_exists($thispage, '_remap')) {
-        $thispage->_remap($method, array_slice($STC_RTR->rsegments, 2));
-    }
-    else {
-        if ( ! in_array(strtolower($method), array_map('strtolower', get_class_methods($thispage)))) {
-            if ( ! empty($STC_RTR->routes['404_override'])) {
-                $x = explode('/', $STC_RTR->routes['404_override']);
-                $class = $x[0];
-                $method = (isset($x[1]) ? $x[1] : 'index');
-                if ( ! class_exists($class)) {
-                    if ( ! file_exists(APPPATH.'/ctr/'.$class.'.php')) {
-                        show_404();
+                        include_once APPPATH . 'ctr' . DIRECTORY_SEPARATOR . $class . '.php';
+                        unset($controller);
+                        $controller = new $class();
                     }
-
-                    include_once (APPPATH.'/ctr/'.$class.'.php');
-                    unset($thispage);
-                    $thispage = new $class();
+                }
+                else {
+                    show_404();
                 }
             }
-            else {
-                show_404();
-            }
+
+            call_user_func_array(array(&$controller, $method), array_slice($STC_RTR->rsegment_array(), 2));
         }
 
-        call_user_func_array(array(&$thispage, $method), array_slice($STC_RTR->rsegments, 2));
+        // Mark a benchmark end point
+        $STC_BMK->mark('controller_execution_( ' . $class . ' / ' . $method . ' )_end');
     }
-
-    // Mark a benchmark end point
-    $STC_BM->mark('controller_execution_time_( '.$class.' / '.$method.' )_end');
+    catch (Exception $e) {
+        show_exception($e);
+    }

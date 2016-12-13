@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,47 +39,13 @@
     /**
      * PHP Global Variables Class
      *
-     * @package		STC
-     * @subpackage	Utilities
+     * @package     STC
+     * @subpackage  Utilities
      * @category    PHP Global Variables
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_PHP_Globals {
-
-        /**
-         * The get class instance
-         *
-         * @var array
-         */
-        public $get;
-
-        /**
-         * The post class instance
-         *
-         * @var array
-         */
-        public $post;
-
-        /**
-         * The cookie class instance
-         *
-         * @var array
-         */
-        public $cookie;
-
-        /**
-         * The session class instance
-         *
-         * @var array
-         */
-        public $session;
-
-        /**
-         * The files class instance
-         *
-         * @var array
-         */
-        public $files;
+    class STC_PHP_Globals
+    {
 
         /**
          * The current used variable
@@ -90,24 +56,63 @@
         protected $_;
 
         /**
+         * The current used variable
+         *
+         * @var array
+         * @access protected
+         */
+        protected $instances = array();
+
+        /**
          * Class constructor
          */
-        public function __construct() {
-            // Initializing G_P_C_S_F classes
-            $this->get      =  new STC_PHP_Globals_GET();
-            $this->post     =  new STC_PHP_Globals_POST();
-            $this->cookie   =  new STC_PHP_Globals_COOKIE();
-            $this->session  =  new STC_PHP_Globals_SESSION();
-            $this->files    =  new STC_PHP_Globals_FILES();
+        public function __construct(&$_ = NULL)
+        {
+            $this->_ = &$_;
+        }
+
+        /**
+         *
+         */
+        public function __get($name)
+        {
+            $name = strtolower($name);
+            if (array_key_exists($name, $this->instances)) {
+                return $this->instances[$name];
+            }
+            else {
+                switch ($name) {
+                    case 'get':
+                        return $this->instances['get'] = new STC_PHP_Globals($_GET);
+
+                    case 'post':
+                        return $this->instances['post'] = new STC_PHP_Globals($_POST);
+
+                    case 'cookie':
+                        return $this->instances['cookie'] = new STC_PHP_Globals($_COOKIE);
+
+                    case 'session':
+                        return $this->instances['session'] = new STC_PHP_Globals($_SESSION);
+
+                    case 'files':
+                        return $this->instances['files'] = new STC_PHP_Globals($_FILES);
+
+                    default:
+                        return NULL;
+                }
+            }
         }
 
         /**
          * Check if the current variable is set and is not null
          *
+         * @param  string  $param  If defined, the method will check if the given key exist
+         *                         in the variable.
          * @return  boolean
          */
-        public function is_set() {
-            return isset($this->{$this->_}) && count($this->{$this->_}) > 0;
+        public function is($param = NULL)
+        {
+            return (NULL === $param) ? (isset($this->_) && count($this->_) > 0) : array_key_exists($param, $this->_);
         }
 
         /**
@@ -117,20 +122,19 @@
          *                               If it's an array, a set of name => value association.
          * @param  mixed         $value  The value of the variable.
          *
-         * @return  object  The current class instance to make chainable method calls.
+         * @return  STC_PHP_Globals
          */
-        public function set_value($id, $value = NULL) {
-
+        public function set($id, $value = NULL)
+        {
             if (is_array($id)) {
                 foreach ($id as $key => $val) {
-                    $this->set_value($key, $val);
+                    $this->set($key, $val);
                 }
             } else {
-                $this->{$this->_}[strval($id)] = $value;
+                $this->_[(string)$id] = $value;
             }
 
             return $this;
-
         }
 
         /**
@@ -142,26 +146,25 @@
          *
          * @return  mixed
          */
-        public function get_value($id = NULL) {
-
-            if ( ! isset($id)) {
-                return $this->{$this->_};
+        public function get($id = NULL)
+        {
+            if (NULL === $id) {
+                return $this->_;
             }
             else if (is_array($id)) {
                 $session = array();
                 foreach ($id as $key) {
-                    $session[$key] = $this->{$this->_}[$key];
+                    $session[$key] = $this->_[$key];
                 }
                 return $session;
             }
             else {
-                if (isset($this->{$this->_}[$id])) {
-                    return $this->{$this->_}[$id];
+                if ($this->is($id)) {
+                    return $this->_[$id];
                 } else {
-                    return FALSE;
+                    return NULL;
                 }
             }
-
         }
 
         /**
@@ -169,119 +172,23 @@
          *
          * @param  string|array  $id  If it's a string, the name of the value.
          *                            If it's an array, a set of value's names.
-         *                            If it's not specified, all the variable array will be returned.
+         *                            If it's not specified, all the variable array will be deleted.
          *
-         * @return  mixed
+         * @return  void
          */
-        public function delete_value($id = NULL) {
-
-            if ( ! isset($id)) {
-                unset($this->{$this->_});
+        public function delete($id = NULL)
+        {
+            if (NULL === $id) {
+                unset($this->_);
             }
             else if (is_array($id)) {
                 foreach ($id as $key) {
-                    unset($this->{$this->_}[$key]);
+                    unset($this->_[$key]);
                 }
             }
             else {
-                unset($this->{$this->_}[$id]);
+                unset($this->_[$id]);
             }
-
         }
 
-    }
-
-    /**
-     * STC_PHP_Globals_GET
-     */
-    class STC_PHP_Globals_GET extends STC_PHP_Globals {
-
-        /**
-         * The $_GET variable
-         *
-         * @var array
-         * @access protected
-         */
-        protected $_get;
-
-        public function __construct() {
-            $this->_get =& $_GET;
-            $this->_    = '_get';
-        }
-    }
-
-    /**
-     * STC_PHP_Globals_POST
-     */
-    class STC_PHP_Globals_POST extends STC_PHP_Globals {
-
-        /**
-         * The $_POST variable
-         *
-         * @var array
-         * @access protected
-         */
-        protected $_post;
-
-        public function __construct() {
-            $this->_post =& $_POST;
-            $this->_     = '_post';
-        }
-    }
-
-    /**
-     * STC_PHP_Globals_COOKIE
-     */
-    class STC_PHP_Globals_COOKIE extends STC_PHP_Globals {
-
-        /**
-         * The $_COOKIE variable
-         *
-         * @var array
-         * @access protected
-         */
-        protected $_cookie;
-
-        public function __construct() {
-            $this->_cookie =& $_COOKIE;
-            $this->_       = '_cookie';
-        }
-    }
-
-    /**
-     * STC_PHP_Globals_SESSION
-     */
-    class STC_PHP_Globals_SESSION extends STC_PHP_Globals {
-
-        /**
-         * The $_SESSION variable
-         *
-         * @var array
-         * @access protected
-         */
-        protected $_session;
-
-        public function __construct() {
-            $this->_session =& $_SESSION;
-            $this->_        = '_session';
-        }
-    }
-
-    /**
-     * STC_PHP_Globals_FILES
-     */
-    class STC_PHP_Globals_FILES extends STC_PHP_Globals {
-
-        /**
-         * The $_FILES variable
-         *
-         * @var array
-         * @access protected
-         */
-        protected $_files;
-
-        public function __construct() {
-            $this->_files =& $_FILES;
-            $this->_      = '_files';
-        }
     }

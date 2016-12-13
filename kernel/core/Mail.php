@@ -27,26 +27,43 @@
     * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     * THE SOFTWARE.
     *
-    * @package	STC
-    * @author	Nana Axel
-    * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-    * @license	http://opensource.org/licenses/MIT	MIT License
+    * @package    STC
+    * @author     Nana Axel
+    * @copyright  Copyright (c) 2015 - 2016, Centers Technologies
+    * @license    http://opensource.org/licenses/MIT    MIT License
     * @filesource
     */
 
     defined('BASEPATH') OR exit('No direct script access allowed');
 
-    // Loading the PHPMailer Class
-    require(BASEPATH."lib/phpMailer/class.phpmailer.php");
+    // Loading PHPMailer Classes
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.pop3.php') );
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.post.php') );
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.smtp.php') );
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.phpmailer.php') );
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.phpmaileroauthgoogle.php') );
+    require make_path( array(BASEPATH, 'lib', 'phpMailer', 'class.phpmaileroauth.php') );
 
     /**
-    * Mails Class
-    *
-    * @package		STC
-    * @subpackage	Libraries
-    * @category	    Mails
-    * @author		Nana Axel
-    * @ignore
-    */
-    class STC_Mail extends PHPMailer {
+     * Mail Class
+     *
+     * @package     STC
+     * @subpackage  Libraries
+     * @category    Mails
+     * @author      Nana Axel
+     */
+    class STC_Mail
+    {
+
+        /**
+         * Create an instance of the class PHPMailer
+         * @return PHPMailer
+         */
+        public function &instance($oauthSupport = FALSE)
+        {
+            $m = $oauthSupport ? new PHPMailerOAuth() : new PHPMailer();
+            $m->setLanguage(translate('lang_name_short'));
+            return $m;
+        }
+
     }

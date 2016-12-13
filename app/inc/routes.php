@@ -1,3 +1,5 @@
 <?php
 
-    $routes['default'] = 'home';
+    defined('BASEPATH') OR exit('No direct script access allowed');
+
+    $routes['default'] = 'Home';

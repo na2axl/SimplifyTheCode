@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,12 +39,13 @@
     /**
      * Database Manager Class
      *
-     * @package		STC
-     * @subpackage	Libraries
+     * @package     STC
+     * @subpackage  Libraries
      * @category    Database
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_OpenDB extends PDO {
+    class STC_OpenDB
+    {
 
         /**
          * The database name
@@ -92,7 +93,7 @@
          * @var object
          * @access private
          */
-        private $pdo_instance = NULL;
+        private $pdo = NULL;
 
         /**
          * Registered SQL operators
@@ -100,7 +101,31 @@
          * @var array
          * @access private
          */
-        private $operators = array('<', '<=', '=', '<>', '>=', '>');
+        private static $operators = array('!=', '<>', '<=', '>=', '=', '<', '>');
+
+        /**
+         * The where clause
+         *
+         * @var string
+         * @access private
+         */
+        private $where = NULL;
+
+        /**
+         * The order clause
+         *
+         * @var string
+         * @access private
+         */
+        private $order = NULL;
+
+        /**
+         * The limit clause
+         *
+         * @var string
+         * @access private
+         */
+        private $limit = NULL;
 
         /**
          * Class __constructor
@@ -110,22 +135,108 @@
          *
          * @return void
          */
-        public function __construct($table = "", $database = NULL, $server = NULL, $user = NULL, $pass = NULL) {
+        public function __construct($table = '', $database = NULL, $server = NULL, $user = NULL, $pass = NULL)
+        {
             $this->setDB($database, $table, $server, $user, $pass);
         }
 
-        public function setDB($database = NULL, $table = NULL, $server = NULL, $user = NULL, $pass = NULL) {
+        /**
+         * Changes the currently used database
+         *
+         * @param string $database The database's name
+         * @param string $table    The table's name
+         * @param string $server   The server's url
+         * @param string $user     The user name
+         * @param string $pass     The password
+         */
+        public function setDB($database = NULL, $table = NULL, $server = NULL, $user = NULL, $pass = NULL)
+        {
             $this->database = (isset($database) && $database != '') ? $database : config_item('db_name');
-            $this->table = (isset($table) && $table != '') ? $table : $this->table;
-            $this->hostname = (isset($server) && $server != '') ? $server   : config_item('db_server');
-            $this->username = (isset($user) && $server != '')   ? $user     : config_item('db_user');
-            $this->password = (isset($pass) && $server != '')   ? $pass     : config_item('db_pass');
+            $this->table    = (isset($table) && $table != '')       ? $table    : $this->table;
+            $this->hostname = (isset($server) && $server != '')     ? $server   : config_item('db_server');
+            $this->username = (isset($user) && $server != '')       ? $user     : config_item('db_user');
+            $this->password = (isset($pass) && $server != '')       ? $pass     : config_item('db_pass');
             $this->close();
             $this->_instanciate();
         }
 
-        public function from($table) {
+        /**
+         * Changes the currently used table
+         *
+         * @param string $table The table's name
+         *
+         * @return STC_OpenDB
+         */
+        public function from($table)
+        {
             $this->table = $table;
+            return $this;
+        }
+
+        /**
+         * Add a where condition
+         *
+         * @param string|array $condition
+         *
+         * @return STC_OpenDB
+         */
+        public function where($condition)
+        {
+            // where(array('field1'=>'value', 'field2'=>'value'))
+            $this->where = (NULL !== $this->where) ? $this->where . ' OR (' : '(';
+            if (is_array($condition)) {
+                $i = 0;
+                $operand = '=';
+                foreach ($condition as $field => $value) {
+                    $this->where .= ($i > 0) ? ' AND ' : '';
+                    if (is_int($field)) {
+                        $this->where .= $value;
+                    }
+                    else {
+                        foreach (self::$operators as $operator) {
+                            if (in_array($operator, explode(' ', $value), TRUE)) {
+                                $operand = $operator;
+                            }
+                        }
+                        $this->where .= $field . ' ' . $operand . ' ' . str_replace($operand, '', $value);
+                        $operand = '=';
+                    }
+                    ++$i;
+                }
+            }
+            else {
+                $this->where .= $condition;
+            }
+            $this->where .= ')';
+
+            return $this;
+        }
+
+        /**
+         * Add an order clause
+         *
+         * @param string $field
+         * @param string $mode
+         *
+         * @return STC_OpenDB
+         */
+        public function order($field, $mode = 'asc')
+        {
+            $this->order = " ORDER BY {$field} {$mode} ";
+            return $this;
+        }
+
+        /**
+         * Add a limit clause
+         *
+         * @param  int  $offset
+         * @param  int  $count
+         *
+         * @return STC_OpenDB
+         */
+        public function limit($offset, $count)
+        {
+            $this->limit = " LIMIT {$offset}, {$count} ";
             return $this;
         }
 
@@ -136,20 +247,25 @@
          *
          * @throws PDOException
          */
-        private function _instanciate() {
+        private function _instanciate()
+        {
             try {
-                $this->pdo_instance = new PDO('mysql:host='.$this->hostname.';dbname='.$this->database, $this->username, $this->password, array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE, PDO::ATTR_PERSISTENT => TRUE));
+                $this->pdo = new PDO('mysql:host='.$this->hostname.';dbname='.$this->database, $this->username, $this->password, array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE, PDO::ATTR_PERSISTENT => TRUE));
 
                 // Logging Message
                 log_message('info', 'Database Class Initialized');
-
             }
             catch (PDOException $e) {
                 show_exception($e);
             }
         }
 
-        protected function _parse_where_clause($conditions) {
+        /**
+         * Parses a where clause
+         * @deprecated 1.0.0 Use STC_OpenDB::where() instead
+         */
+        protected function _parse_where_clause($conditions)
+        {
             $conds     = '';
             $count_or  = 0;
             $count_and = 0;
@@ -162,25 +278,25 @@
                         $count_and = 0;
                         foreach ($value as $field => $data) {
                             $conds .= ($count_and != 0) ? ' AND ' : '';
-                            foreach ($this->operators as $operator) {
-                                if (in_array($operator, explode(' ', $key)) || in_array($operator, str_split($key))) {
+                            foreach (self::$operators as $operator) {
+                                if (FALSE !== strpos($condition, $operator) || in_array($operator, explode(' ', $condition), TRUE) || in_array($operator, str_split($condition), TRUE)) {
                                     $operand = $operator;
                                     break;
                                 }
                             }
-                            $conds .= $field . $operand . $this->pdo_instance->quote($data);
+                            $conds .= $field . $operand . $data;
                             $count_and++;
                         }
                         $count_or++;
                     } else {
                         $conds .= ($count_and != 0) ? ' AND ' : '';
-                        foreach ($this->operators as $operator) {
-                            if (in_array($operator, explode(' ', $key)) || in_array($operator, str_split($key))) {
+                        foreach (self::$operators as $operator) {
+                            if (FALSE !== strpos($condition, $operator) || in_array($operator, explode(' ', $condition), TRUE) || in_array($operator, str_split($condition), TRUE)) {
                                 $operand = $operator;
                                 break;
                             }
                         }
-                        $conds .= $key . $operand . $this->pdo_instance->quote($value);
+                        $conds .= $key . $operand . $value;
                         $count_and++;
                     }
                 }
@@ -192,24 +308,28 @@
         }
 
         /**
+         * Reset all clauses
+         * @access protected
+         */
+        protected function _reset_clauses()
+        {
+            $this->where = NULL;
+            $this->order = NULL;
+            $this->limit = NULL;
+        }
+
+        /**
          * Execute the SELECT SQL query
          *
          * @param  mixed  $fields      The fields to select. This value can be an array of fields,
          *                             or a string of fields (according to the SELECT SQL query syntax).
-         * @param  mixed  $conditions  The conditions used in the WHERE clause. This value can be an array of
-         *                             field => value associations (this will create a field *operator* value condition) or
-         *                             a string of conditions (according to the SELECT SQL query syntax).
-         * @param  mixed  $order_by    The condition used in the ORDER BY clause. This value can be an array of
-         *                             values, or a string (according to the SELECT SQL query syntax).
-         * @param  mixed  $limit       The condition used in the LIMIT clause. This value can be an array of values,
-         *                             or a string (according to the SELECT SQL query syntax).
          *
          * @throws STC_OpenDBException
          *
-         * @return array
+         * @return PDO
          */
-        protected function _select($fields, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $conds = NULL;
+        protected function _select($fields)
+        {
             $count = 0;
             $datas = array();
 
@@ -218,53 +338,72 @@
                 $fields = implode(',', $fields);
             }
 
-            // Constructing the WHERE clause's conditions list
-            $conds = $this->_parse_where_clause($conditions);
-
-            // Constructing the ORDER BY clause's condition
-            if (is_array($order_by)) {
-                $order_by = implode(' ', $order_by);
-            }
-
-            // Constructing the LIMIT clause's condition
-            if (is_array($limit)) {
-                $limit = implode(', ', $limit);
-            }
-
             // Constructing the SELECT query string
-            $query = 'SELECT ' . $fields . ' FROM ' . $this->table . ((isset($conds)) ? ' WHERE ' . $conds : '') . ((isset($order_by)) ? ' ORDER BY ' . $order_by . ' ' : ' ') . ((isset($limit)) ? 'LIMIT ' . $limit : '');
+            $query = 'SELECT ' . $fields . ' FROM ' . $this->table . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '') . ((NULL !== $this->order) ? $this->order : ' ') . ((NULL !== $this->limit) ? $this->limit : ' ');
 
             // Preparing the query
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
+            $getFieldsDatas = $this->pdo->prepare($query);
 
             // Executing the query
             if ($getFieldsDatas->execute() !== FALSE) {
+                $this->_reset_clauses();
                 return $getFieldsDatas;
             }
             else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
             }
-
         }
 
-        public function select($fields, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $select = $this->_select($fields, $conditions, $order_by, $limit);
-            return $select->fetch(PDO::FETCH_LAZY);
+        /**
+         * Selects datas in database
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return PDO
+         */
+        public function select($fields = '*')
+        {
+            return $this->_select($fields);
         }
 
-        public function select_array($fields, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $select = $this->_select($fields, $conditions, $order_by, $limit);
+        /**
+         * Selects datas as array of arrays in database
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function select_array($fields = '*')
+        {
+            $select = $this->_select($fields);
             $result = array();
 
             while ($r = $select->fetch(PDO::FETCH_LAZY)) {
-                $result[] = (array) $r;
+                $result[] = array_diff_key((array) $r, array('queryString' => 'queryString'));
             }
 
             return $result;
         }
 
-        public function select_object($fields, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $select = $this->_select($fields, $conditions, $order_by, $limit);
+        /**
+         * Selects datas as array of objects in database
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function select_object($fields = '*')
+        {
+            $select = $this->_select($fields);
             $result = array();
 
             while ($r = $select->fetch(PDO::FETCH_OBJ)) {
@@ -274,9 +413,20 @@
             return $result;
         }
 
-        private function _join($fields, $joinparams, $conditions = NULL, $order_by = NULL, $limit = NULL) {
+        /**
+         * Executes a SELECT ... JOIN query
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         * @param  mixed  $joinparams  The information used for jointure.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return PDO
+         */
+        private function _join($fields, $joinparams)
+        {
             $jcond = '';
-            $conds = '';
             $count = 0;
             $datas = array();
 
@@ -284,46 +434,79 @@
                 $fields = implode(',', $fields);
             }
 
-            $conds = $this->_parse_where_clause($conditions);
-
             $count = 0;
             if (is_array($joinparams)) {
                 foreach ($joinparams as $joinparam) {
-                    $jcond .= ' ' . $joinparam['side'] . ' JOIN ' . $joinparam['db'] . ' ON ' . $joinparam['cond'] . ' ';
+                    $jcond .= ' ' . $joinparam['side'] . ' JOIN ' . $joinparam['table'] . ' ON ' . $joinparam['cond'] . ' ';
                 }
             }
 
-            $query = 'SELECT ' . $fields . ' FROM ' . $this->table . ' ' .  $jcond . ' ' . (($conds != '') ? ' WHERE ' . $conds : '') . (($order_by != NULL) ? ' ORDER BY ' . $order_by . ' ' : ' ') . $limit;
+            $query = 'SELECT ' . $fields . ' FROM ' . $this->table . ' ' .  $jcond . ' ' . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '') . ((NULL !== $this->order) ? $this->order : ' ') . ((NULL !== $this->limit) ? $this->limit : ' ');
 
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
+            $getFieldsDatas = $this->pdo->prepare($query);
 
             if ($getFieldsDatas->execute() !== FALSE) {
-                $getFieldsDatas->setFetchMode(PDO::FETCH_LAZY);
-                return $getFieldsDatas->fetch();
+                $this->_reset_clauses();
+                return $getFieldsDatas;
             }
-            else
+            else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
-
+            }
         }
 
-        public function join($fields, $joinparams, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $join = $this->_join($fields, $joinparams, $conditions, $order_by, $limit);
-            return $join->fetch(PDO::FETCH_LAZY);
+        /**
+         * Selects datas in database with table joining
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         * @param  mixed  $joinparams  The information used for jointure.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return PDO
+         */
+        public function join($fields, $joinparams)
+        {
+            return $this->_join($fields, $joinparams);
         }
 
-        public function join_array($fields, $joinparams, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $join = $this->_join($fields, $joinparams, $conditions, $order_by, $limit);
+        /**
+         * Selects datas as array of arrays in database with table joining
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         * @param  mixed  $joinparams  The information used for jointure.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function join_array($fields, $joinparams)
+        {
+            $join = $this->_join($fields, $joinparams);
             $result = array();
 
             while ($r = $join->fetch(PDO::FETCH_LAZY)) {
-                $result[] = (array) $r;
+                $result[] = array_diff_key((array) $r, array('queryString' => 'queryString'));
             }
 
             return $result;
         }
 
-        public function join_object($fields, $joinparams, $conditions = NULL, $order_by = NULL, $limit = NULL) {
-            $join = $this->_join($fields, $joinparams, $conditions, $order_by, $limit);
+        /**
+         * Selects datas as array of objects in database with table joining
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         * @param  mixed  $joinparams  The information used for jointure.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function join_object($fields, $joinparams)
+        {
+            $join = $this->_join($fields, $joinparams);
             $result = array();
 
             while ($r = $join->fetch(PDO::FETCH_OBJ)) {
@@ -333,8 +516,18 @@
             return $result;
         }
 
-        public function count($fields, $conditions = NULL, $limit = NULL) {
-            $conds = '';
+        /**
+         * Counts datas in table
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return integer
+         */
+        public function count($fields = '*')
+        {
             $count = 0;
             $datas = array();
 
@@ -342,29 +535,38 @@
                 $field = implode(',', $fields);
             }
 
-            $conds = $this->_parse_where_clause($conditions);
+            $query = 'SELECT COUNT(' . ((isset($field)) ? $field : $fields) . ') AS opendb_count FROM ' . $this->table . ((NULL !== $this->where) ? ' WHERE ' . $this->where : ' ') . ((NULL !== $this->limit) ? $this->limit : ' ');
 
-            $query = 'SELECT COUNT(' . ((isset($field)) ? $field : $fields) . ') AS opendb_count FROM ' . $this->table . (($conds != '') ? ' WHERE ' . $conds .' ' : ' ') . $limit;
-
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
+            $getFieldsDatas = $this->pdo->prepare($query);
 
             if ($getFieldsDatas->execute() !== FALSE) {
+                $this->_reset_clauses();
                 $data = $getFieldsDatas->fetch();
-                return intval($data['opendb_count']);
+                return (int) $data['opendb_count'];
             }
-            else
+            else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
+            }
 
         }
 
-        public function insert($fieldsAndValues) {
-
+        /**
+         * Inserts datas in table
+         *
+         * @param  mixed  $fieldsAndValues  The fields and the associated values to insert.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return boolean
+         */
+        public function insert($fieldsAndValues)
+        {
             $fields = array();
             $values = array();
 
             foreach ($fieldsAndValues as $field => $value) {
                 $fields[] = $field;
-                $values[] = $this->pdo_instance->quote($value);
+                $values[] = $value;
             }
 
             $field = implode(',', $fields);
@@ -372,18 +574,28 @@
 
             $query = 'INSERT INTO ' . $this->table . '(' . $field . ') VALUES(' . $value . ')';
 
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
+            $getFieldsDatas = $this->pdo->prepare($query);
 
-            if ($getFieldsDatas->execute() !== FALSE)
-                 return TRUE;
-
-            else
+            if ($getFieldsDatas->execute() !== FALSE) {
+                $this->_reset_clauses();
+                return TRUE;
+            }
+            else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
-
+            }
         }
 
-        public function update($fieldsAndValues, $conditions = NULL) {
-
+        /**
+         * Updates datas in table
+         *
+         * @param  mixed  $fieldsAndValues  The fields and the associated values to update.
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return boolean
+         */
+        public function update($fieldsAndValues)
+        {
             $updates = '';
             $conds   = '';
             $count   = count($fieldsAndValues);
@@ -392,7 +604,7 @@
                 $values = array();
                 foreach ($fieldsAndValues as $field => $value) {
                     $count--;
-                    $updates .= "{$field} = ".$this->pdo_instance->quote($value);
+                    $updates .= "{$field} = ".$value;
                     $updates .= ($count != 0) ? ', ' : '';
                 }
             }
@@ -400,49 +612,94 @@
 
             $count   = 0;
 
-            $conds = $this->_parse_where_clause($conditions);
+            $query = 'UPDATE ' . $this->table . ' SET ' . $updates . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '');
 
-            $query = 'UPDATE ' . $this->table . ' SET ' . $updates . (($conds != '') ? ' WHERE ' . $conds : '');
+            $getFieldsDatas = $this->pdo->prepare($query);
 
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
-
-            if ($getFieldsDatas->execute() !== FALSE)
-                 return TRUE;
-
-            else
+            if ($getFieldsDatas->execute() !== FALSE) {
+                $this->_reset_clauses();
+                return TRUE;
+            }
+            else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
-
+            }
         }
 
-        public function delete($conditions) {
-
+        /**
+         * Deletes datas in table
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function delete()
+        {
             $conds   = '';
             $count   = 0;
 
-            $conds = $this->_parse_where_clause($conditions);
+            $query = 'DELETE FROM ' . $this->table . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '');
 
-            $query = 'DELETE FROM ' . $this->table . (($conds != '') ? ' WHERE ' . $conds : '');
+            $getFieldsDatas = $this->pdo->prepare($query);
 
-            $getFieldsDatas = $this->pdo_instance->prepare($query);
-
-            if ($getFieldsDatas->execute() !== FALSE)
-                 return TRUE;
-
-            else
+            if ($getFieldsDatas->execute() !== FALSE) {
+                $this->_reset_clauses();
+                return TRUE;
+            }
+            else {
                 throw new STC_OpenDBException($getFieldsDatas->errorInfo()[2]);
-
+            }
         }
 
-        public function query($query, $options = NULL) {
-            return $this->pdo_instance->query($query, isset($options) ? $options : array());
+        /**
+         * Executes a query
+         *
+         * @uses   PDO::query()
+         *
+         * @param  string  $query      The query to execute
+         * @param  array   $options    PDO options
+         *
+         * @return mixed
+         */
+        public function query($query, array $options = array())
+        {
+            return $this->pdo->query($query, $options);
         }
 
-        public function prepare($query, $options = NULL) {
-            return $this->pdo_instance->prepare($query, isset($options) ? $options : array());
+        /**
+         * Prepares a query
+         *
+         * @uses   PDO::prepare()
+         *
+         * @param  string  $query      The query to execute
+         * @param  array   $options    PDO options
+         *
+         * @return PDO
+         */
+        public function prepare($query, array $options = array())
+        {
+            return $this->pdo->prepare($query, $options);
         }
 
-        public function close() {
-            $this->pdo_instance = FALSE;
+        /**
+         * Quotes a value
+         *
+         * @uses   PDO::quote()
+         *
+         * @param  string  $value
+         *
+         * @return string
+         */
+        public function quote($value)
+        {
+            return $this->pdo->quote($value);
+        }
+
+        /**
+         * Closes a connection
+         */
+        public function close()
+        {
+            $this->pdo = FALSE;
         }
 
     }

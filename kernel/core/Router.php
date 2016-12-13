@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,33 +39,35 @@
     /**
      * Router Class
      *
-     * @package		STC
-     * @subpackage	Libraries
+     * @package     STC
+     * @subpackage  Libraries
      * @category    Router
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_Router {
+    class STC_Router
+    {
 
-        var $directory = '';
+        private $directory = '';
 
-        var $uri       = '';
+        private $uri       = '';
 
-        var $class     = '';
+        private $class     = '';
 
-        var $method    = '';
+        private $method    = '';
 
-        var $keyval    = array();
+        private $keyval    = array();
 
-        var $segments  = array();
+        private $segments  = array();
 
-        var $rsegments = array();
+        private $rsegments = array();
 
-        var $routes    = array();
+        private $routes    = array();
 
-        var $default_controller = '';
+        private $default_controller = '';
 
-        function __construct($uri = false) {
-            if (false !== $uri) {
+        public function __construct($uri = FALSE)
+        {
+            if (FALSE !== $uri) {
                 $this->uri = $uri;
                 return;
             }
@@ -78,10 +80,11 @@
 
         }
 
-        function _set_routing() {
+        public function _set_routing()
+        {
             $segments = array();
 
-    		include ( APPPATH . 'inc/routes.php' );
+    		include ( make_path(array(APPPATH, 'inc', 'routes.php')) );
 
             $this->routes = ( ! isset($routes) OR ! is_array($routes)) ? array() : $routes;
     		unset($routes);
@@ -103,7 +106,8 @@
             $this->_reindex_segments();
         }
 
-        function _explode_segments() {
+        public function _explode_segments()
+        {
             foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", $this->uri)) as $val) {
                 $val = trim($this->_filter_uri($val));
 
@@ -113,14 +117,16 @@
             }
         }
 
-        function _filter_uri($str) {
+        public function _filter_uri($str)
+        {
             $bad	= array('$',		'(',		')',		'%28',		'%29');
             $good	= array('&#36;',	'&#40;',	'&#41;',	'&#40;',	'&#41;');
 
             return str_replace($bad, $good, $str);
         }
 
-        private function _fetch_uri() {
+        private function _fetch_uri()
+        {
             if (php_sapi_name() == 'cli' or defined('STDIN')) {
                 $this->_set_uri($this->_parse_cli_args());
                 return;
@@ -152,12 +158,14 @@
             return;
         }
 
-        public function _set_uri($string) {
-            $string = remove_invisible_characters($string, false);
+        public function _set_uri($string)
+        {
+            $string = remove_invisible_characters($string, FALSE);
             $this->uri = ($string == '/') ? '' : $string;
         }
 
-        private function _detect_uri() {
+        private function _detect_uri()
+        {
             if ( ! isset($_SERVER['REQUEST_URI']) OR ! isset($_SERVER['SCRIPT_NAME'])) {
                 return '';
             }
@@ -191,25 +199,29 @@
 
             $uri = parse_url($uri, PHP_URL_PATH);
 
-            return str_replace(array('//', '../'), '/', trim($uri, '/'));
+            return str_replace(array('//', '../'), '/', trim($uri));
 
         }
 
-        private function _parse_cli_args() {
+        private function _parse_cli_args()
+        {
             $args = array_slice($_SERVER['argv'], 1);
 
             return $args ? '/' . implode('/', $args) : '';
         }
 
-        public function get_uri() {
+        public function get_uri()
+        {
             return $this->uri;
         }
 
-        private function _uri_to_segments() {
+        private function _uri_to_segments()
+        {
             $this->segments = explode('/', $this->uri);
         }
 
-        private function _parse_routes() {
+        private function _parse_routes()
+        {
             $uri = implode('/', $this->segments);
 
             if (isset($this->routes[$uri])) {
@@ -217,9 +229,9 @@
             }
 
             foreach ($this->routes as $key => $val) {
-                $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', str_replace(':str', '[a-z0-9-_\.]+', $key)));
+                $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', str_replace(':str', '[a-zA-Z0-9-_\.]+', $key)));
                 if (preg_match('#^'.$key.'$#', $uri)) {
-                    if (strpos($val, '$') !== false && strpos($key, '(') !== false) {
+                    if (strpos($val, '$') !== FALSE && strpos($key, '(') !== FALSE) {
                         $val = preg_replace('#^'.$key.'$#', $val, $uri);
                     }
                     return $this->_set_request(explode('/', $val));
@@ -229,7 +241,8 @@
             $this->_set_request($this->segments);
         }
 
-        private function _set_request($segments = array()) {
+        private function _set_request($segments = array())
+        {
             $segments = $this->_validate_request($segments);
 
             if (count($segments) == 0) {
@@ -249,21 +262,22 @@
             $this->rsegments = $segments;
         }
 
-        private function _validate_request($segments) {
+        private function _validate_request($segments)
+        {
             if (count($segments) == 0) {
                 return $segments;
             }
 
-            if (file_exists(APPPATH.'/ctr/'.$segments[0].'.php')) {
+            if (file_exists( make_path(array(APPPATH, 'ctr', $segments[0] . '.php')) )) {
                 return $segments;
             }
 
-            if (is_dir(APPPATH.'/ctr/'.$segments[0])) {
+            if (is_dir(make_path(array(APPPATH, 'ctr', $segments[0])))) {
                 $this->set_directory($segments[0]);
                 $segments = array_slice($segments, 1);
 
                 if (count($segments) > 0) {
-                    if ( ! file_exists(APPPATH.'/ctr/'.$this->fetch_directory().$segments[0].'.php')) {
+                    if ( ! file_exists(make_path(array(APPPATH, 'ctr', $this->fetch_directory(), $segments[0] . '.php')))) {
                         if ( ! empty($this->routes['404_override'])) {
                             $x = explode('/', $this->routes['404_override']);
                             $this->set_directory('');
@@ -278,7 +292,7 @@
                     }
                 }
                 else {
-                    if (strpos($this->default_controller, '/') !== false) {
+                    if (strpos($this->default_controller, '/') !== FALSE) {
                         $x = explode('/', $this->default_controller);
                         $this->set_class($x[0]);
                         $this->set_method($x[1]);
@@ -288,7 +302,7 @@
                         $this->set_method('index');
                     }
 
-                    if ( ! file_exists(APPPATH.'/ctr/'.$this->fetch_directory().$this->default_controller.'.php')) {
+                    if ( ! file_exists(make_path(array(APPPATH, 'ctr', $this->fetch_directory(), $this->default_controller . '.php')))) {
                         $this->directory = '';
                         return array();
                     }
@@ -310,8 +324,9 @@
             show_404();
         }
 
-        private function _set_default_controller() {
-            if (strpos($this->routes['default'], '/') !== false) {
+        private function _set_default_controller()
+        {
+            if (strpos($this->routes['default'], '/') !== FALSE) {
                 $x = explode('/', $this->routes['default']);
 
                 $this->set_class($x[0]);
@@ -325,10 +340,10 @@
             }
 
             $this->_reindex_segments();
-
         }
 
-        private function _uri_to_assoc($n = 3, $default = array(), $which = 'segment') {
+        private function _uri_to_assoc($n = 3, $default = array(), $which = 'segment')
+        {
             $total_segments = "total_{$which}s";
             $segment_array = "{$which}_array";
 
@@ -382,31 +397,38 @@
             return $retval;
         }
 
-        public function total_segments() {
+        public function total_segments()
+        {
             return count($this->segments);
         }
 
-        public function total_rsegments() {
+        public function total_rsegments()
+        {
             return count($this->rsegments);
         }
 
-        public function segment_array() {
+        public function segment_array()
+        {
             return $this->segments;
         }
 
-        public function rsegment_array() {
+        public function rsegment_array()
+        {
             return $this->rsegments;
         }
 
-        public function uri_to_assoc($n = 3, $default = array()) {
+        public function uri_to_assoc($n = 3, $default = array())
+        {
             return $this->_uri_to_assoc($n, $default, 'segment');
         }
 
-        public function ruri_to_assoc($n = 3, $default = array()) {
+        public function ruri_to_assoc($n = 3, $default = array())
+        {
             return $this->_uri_to_assoc($n, $default, 'rsegment');
         }
 
-        public function assoc_to_uri($array, $n = 3) {
+        public function assoc_to_uri($array, $n = 3)
+        {
             $temp = array();
             $tget = array();
             foreach ((array)$array as $key => $val) {
@@ -414,43 +436,52 @@
                 $temp[] = $val;
             }
             foreach ((array)$_GET  as $key => $val) {
-                $tget[] = $key.'='.$val;
+                $tget[] = $key . '=' . $val;
             }
             $segments = array_slice($this->segments, 0, $n-1);
-            if (count($_GET) > 0)
+            if (count($_GET) > 0) {
                 return implode('/', array_merge($segments, $temp)).'/?'.implode('&', $tget);
-            else
+            }
+            else {
                 return implode('/', array_merge($segments, $temp));
+            }
         }
 
-        private function _reindex_segments() {
+        private function _reindex_segments()
+        {
             array_unshift($this->segments, NULL);
             array_unshift($this->rsegments, NULL);
             unset($this->segments[0]);
             unset($this->rsegments[0]);
         }
 
-        public function set_class($class) {
+        public function set_class($class)
+        {
             $this->class = str_replace(array('/', '.'), '', $class);
         }
 
-        public function set_method($method) {
+        public function set_method($method)
+        {
             $this->method = $method;
         }
 
-        public function set_directory($dir) {
-            $this->directory = str_replace(array('/', '.'), '', $dir).'/';
+        public function set_directory($dir)
+        {
+            $this->directory = str_replace(array('/', '.'), '', $dir) . '/';
         }
 
-        public function fetch_class() {
+        public function fetch_class()
+        {
             return ucfirst($this->class);
         }
 
-        public function fetch_directory() {
+        public function fetch_directory()
+        {
             return $this->directory;
         }
 
-        public function fetch_method() {
+        public function fetch_method()
+        {
             if ($this->method == $this->fetch_class()) {
                 return 'index';
             }
@@ -458,7 +489,8 @@
             return $this->method;
         }
 
-        function _set_overrides($routing) {
+        public function _set_overrides($routing)
+        {
             if ( ! is_array($routing)) {
                 return;
             }
@@ -475,6 +507,23 @@
                 $routing['function'] = ($routing['function'] == '') ? 'index' : $routing['function'];
                 $this->set_method($routing['function']);
             }
+        }
+
+        public function exists($route)
+        {
+            include make_path( array(APPPATH, 'inc', 'routes.php') );
+
+            $this->routes = ( ! isset($routes) OR ! is_array($routes)) ? array() : $routes;
+            unset($routes);
+
+            foreach ($this->routes as $key => $val) {
+                $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', str_replace(':str', '[a-zA-Z0-9-_\.]+', $key)));
+                if (preg_match('#^'.$key.'$#', $route)) {
+                    return TRUE;
+                }
+            }
+
+            return FALSE;
         }
 
     }

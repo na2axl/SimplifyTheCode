@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel
-     * @copyright	Copyright (c) 2015 - 2016, Centers Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package     STC
+     * @author      Nana Axel
+     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
 
@@ -39,28 +39,26 @@
     /**
      * Base Controller Class
      *
-     * @package		STC
-     * @subpackage	Controllers
+     * @package     STC
+     * @subpackage  Controllers
      * @category    Base Controller
-     * @author		Nana Axel
+     * @author      Nana Axel
      */
-    class STC_Controller {
+    class STC_Controller
+    {
 
         /**
          * The current instance of the class
-         *
-         * @var object
+         * @var STC_Controller
          * @access private
          */
-        private static $instance ;
+        private static $instance;
 
         /**
          * Class __constructor
-         *
-         * @return void
          */
-        public function __construct( ) {
-
+        public function __construct( )
+        {
             // Saving the current instance
             self::$instance =& $this ;
 
@@ -70,15 +68,10 @@
             }
 
             // Autoload application files
-            $this->_autoloader();
+            $this->_autoload();
 
-            // Execute user functions
-            $user_funcs = config_item('on_init_controller');
-            if (isset($user_funcs) && is_array($user_funcs)) {
-                foreach ($user_funcs as $function) {
-                    call_user_func_array($function, array(&$this));
-                }
-            }
+            // Trigger Controller events
+            $this->events->controller->trigger('init', array(&$this));
 
             // Logging Message
             log_message('info', 'Controller Class Initialized');
@@ -86,64 +79,40 @@
 
         /**
          * Return the current instance of the class
-         *
          * @static
-         * @return object
+         * @return STC_Controller
          */
-        public static function &get_instance( ) {
+        public static function &get_instance( )
+        {
             return self::$instance ;
         }
 
         /**
          * Files autoloader
-         *
+         * @access private
          * @return bool  FALSE if no file has been found
          */
-        private function _autoloader( ) {
-            if ( file_exists( APPPATH . 'inc/autoloader.php' ) ) {
-                include_once ( APPPATH . 'inc/autoloader.php' ) ;
+        private function _autoload( )
+        {
+            if ( file_exists( make_path(array(APPPATH, 'inc', 'autoloader.php')) ) ) {
+                include_once make_path(array(APPPATH, 'inc', 'autoloader.php'));
             }
-            if ( !isset ( $autoload )) {
-                return false ;
+            if ( ! isset ( $autoload )) {
+                return FALSE ;
             }
-            if ( isset ( $autoload['includes'] )) {
-                foreach ( $autoload['includes'] as $item ) {
-                    $this->includes( $item ) ;
-                }
-            }
-            if ( isset ( $autoload['libraries'] ) and count( $autoload['libraries'] ) > 0 ) {
-                foreach ( $autoload['libraries'] as $item ) {
-                    $this->library( $item ) ;
-                }
-            }
-        }
 
-        public function library( $library = '' ) {
-            if ( is_array( $library )) {
-                foreach ( $library as $class ) {
-                    $this->library( $class ) ;
-                }
-                return ;
+            if ( ! is_array( $autoload )) {
+                log_message('error', 'Your autoload file is not formatted correctly: The variable "$autoload" is not an array.');
+                show_error('Your autoload file is not formatted correctly: The variable "$autoload" is not an array.');
             }
-            if ( $library == '' ) {
-                return false ;
-            }
-            if ( file_exists( APPPATH . 'lib/'.$library.'.php' ) ) {
-                require_once ( APPPATH . 'lib/' . $library . '.php' );
-            }
-        }
 
-        public function includes( $include = '' ) {
-            if ( is_array( $include )) {
-                foreach ( $include as $class ) {
-                    $this->includes( $class ) ;
+            foreach ( $autoload as $file ) {
+                if ( file_exists( $filepath = make_path(array(APPPATH, 'lib', str_replace('.php', '', $file) . '.php')) ) ) {
+                    require $filepath;
                 }
-            }
-            if ( $include == '' ) {
-                return false ;
-            }
-            if ( file_exists( APPPATH . 'inc/'.$include.'.php' ) ) {
-                return require_once ( APPPATH . 'inc/' . $include . '.pho' );
+                else {
+                    log_message('error', 'Unable to load the file: ' . $filepath);
+                }
             }
         }
 
