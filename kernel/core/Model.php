@@ -111,7 +111,7 @@
             }
 
             if (empty($name)) {
-                $name = $model;
+                $name = strtolower($model);
             }
 
             if (in_array($name, $this->_stc_models, TRUE)) {
@@ -123,8 +123,8 @@
                 throw new RuntimeException('The model name you are loading is the name of a resource that is already being used: ' . $name);
             }
 
-            $model = ucfirst(strtolower($model));
-            $class = 'MDL_' . $model;
+            $model = ucfirst($model);
+            $class = config_item('model_prefix') . $model;
             if ( ! class_exists($class)) {
                 if ( ! file_exists(make_path(array(APPPATH, 'mdl', $path, $model . '.php')))) {
                     throw new RuntimeException('Unable to locate the model you have specified: ' . $model);

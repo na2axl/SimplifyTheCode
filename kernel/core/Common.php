@@ -69,7 +69,7 @@
          */
         function make_path( array $path ) {
             return implode(DIRECTORY_SEPARATOR, array_map(function($field) {
-                return trim($field, '/\\');
+                return rtrim($field, '/\\');
             }, $path) );
         }
     }
@@ -113,11 +113,13 @@
          * Checks if the base_url configuration item is set, otherwise guess the application
          * base url and auto detect the protocol (http/https)
          *
+         * @param  string  $append  The URI to append to the base url
+         *
          * @return string
          */
-        function base_url( ) {
+        function base_url( $append = '' ) {
             if ( config_item('base_url') !== '' ) {
-                $url = rtrim( config_item('base_url'), '/' ) . '/' ;
+                $url = config_item('base_url');
             }
             else {
                 $FCPATH_fix = str_replace( '\\', '/', FCPATH ) ;
@@ -141,7 +143,36 @@
                 $schema = is_ssl( ) ? 'https://' : 'http://' ; // set_url_scheme() is not defined yet
                 $url = $schema . $_SERVER['HTTP_HOST'] . $path ;
             }
-            return $url;
+            return rtrim( $url, '/' ) . '/' . ltrim( $append, '/' );
+        }
+    }
+
+    if ( ! function_exists('new_route')) {
+        /**
+         * Create a new STC_Route instance
+         *
+         * @param  string  $name    The name of the route
+         * @param  string  $route   The route URI
+         * @param  string  $action  The action to execute
+         *
+         * @return  STC_Route
+         */
+        function new_route( $name, $route, $action ) {
+            return new STC_Route($name, $route, $action);
+        }
+    }
+
+    if ( ! function_exists('route')) {
+        /**
+         * Return the route by the given name
+         *
+         * @param  string  $name   The name of the route
+         * @param  array   $param  The parameters to insert in the route
+         *
+         * @return  string
+         */
+        function route( $name, array $param = array() ) {
+            return STC_Route::getRouteOf($name, $param);
         }
     }
 
@@ -327,7 +358,7 @@
                 }
 
                 if ( ! $found) {
-                    log_message('error', 'The configuration file does not exist.');
+                    log_message('error', 'The configuration file does not exist: ' . $file_path . '.');
                     set_status_header(503);
                     echo 'The configuration file does not exist.';
                     exit(3); // EXIT_CONFIG
@@ -392,6 +423,22 @@
             }
 
             return $_mimes[0];
+        }
+    }
+
+    if ( ! function_exists('mime_type')) {
+        /**
+         * Returns the MIME type of an extension
+         *
+         * @param  string  $extension  The name of the extension you want
+         *                             to get the MIME type
+         * @return  string  The MIME type of the given extension. If no MIME type is found,
+         *                  the extension itself is returned
+         */
+        function mime_type( $extension ) {
+            $mimes = get_mimes();
+
+            return array_key_exists(strtolower($extension), $mimes) ? $mimes[strtolower($extension)] : strtolower($extension);
         }
     }
 

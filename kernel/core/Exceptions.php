@@ -214,7 +214,7 @@
                 if ($_router === NULL) {
                     $_router[0] =& load_class('Router');
                 }
-                log_message('debug', 'A 404 page not found error occurred at ' . base_url() . $_router[0]->get_uri());
+                log_message('debug', 'A 404 page not found error occurred at ' . base_url($_router[0]->get_uri()));
             }
 
             return $buffer;

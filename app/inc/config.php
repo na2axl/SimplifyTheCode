@@ -302,4 +302,3 @@
      *
      */
     // $config['your_config_key'] = 'your_value';
-    $config['assets_url'] = $config['base_url'] . 'assets/';

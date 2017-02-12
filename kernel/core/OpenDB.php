@@ -604,7 +604,7 @@
                 $values = array();
                 foreach ($fieldsAndValues as $field => $value) {
                     $count--;
-                    $updates .= "{$field} = ".$value;
+                    $updates .= "{$field} = {$value}";
                     $updates .= ($count != 0) ? ', ' : '';
                 }
             }

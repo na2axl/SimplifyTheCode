@@ -676,6 +676,18 @@
             }
         }
 
+        /**
+         * Set if we have to encrypt the file name
+         *
+         * @param   bool  $encrypt
+         * @return  STC_Upload
+         */
+        public function set_encrypt_name($encrypt)
+        {
+            $this->encrypt_name = $encrypt;
+            return $this;
+        }
+
         // --------------------------------------------------------------------
 
         /**

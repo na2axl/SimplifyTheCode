@@ -63,6 +63,16 @@
     require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Common.php';
 
     // --------------------------------------------------------------------
+    // Loading Base Controller
+    // --------------------------------------------------------------------
+    require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Controller.php';
+
+    // --------------------------------------------------------------------
+    // Loading Route Manager
+    // --------------------------------------------------------------------
+    require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Route.php';
+
+    // --------------------------------------------------------------------
     // Loading application functions
     // --------------------------------------------------------------------
     require_once APPPATH . 'inc' . DIRECTORY_SEPARATOR . 'common.php';
@@ -116,11 +126,6 @@
             }
         }
     }
-
-    // --------------------------------------------------------------------
-    // Loading Base Controller
-    // --------------------------------------------------------------------
-    require_once BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'Controller.php';
 
     // --------------------------------------------------------------------
     // Loading Events Handler

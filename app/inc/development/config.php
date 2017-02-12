@@ -17,7 +17,7 @@
      * and never rely on auto-guessing, especially in production environments.
      *
      */
-    $config['base_url'] = 'http://127.0.0.1:8000/';
+    $config['base_url'] = '';
 
     /*
      *----------------------------------------------------------------------
@@ -60,7 +60,7 @@
      * This is the name of your database.
      *
      */
-    $config['db_name'] = 'iai_social_network';
+    $config['db_name'] = '';
 
     /*
      *----------------------------------------------------------------------
@@ -93,6 +93,16 @@
      *
      */
     $config['charset'] = 'utf-8';
+
+    /*
+     *----------------------------------------------------------------------
+     * MODEL PREFIX
+     *----------------------------------------------------------------------
+     *
+     * The prefic of all models class names.
+     *
+     */
+    $config['model_prefix'] = 'MDL_';
 
     /*
      *----------------------------------------------------------------------
@@ -302,4 +312,3 @@
      *
      */
     // $config['your_config_key'] = 'your_value';
-    $config['assets_url'] = $config['base_url'] . 'assets/';

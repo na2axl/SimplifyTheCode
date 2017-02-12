@@ -77,7 +77,6 @@
 
             // Logging Message
             log_message('info', 'Router Class Initialized');
-
         }
 
         public function _set_routing()
@@ -184,7 +183,7 @@
 
             $parts = preg_split('#\?#i', $uri, 2);
             $uri = $parts[0];
-            if (isset($parts[1])) {
+            if (isset($parts[1]) && config_item('enable_query_strings')) {
                 $_SERVER['QUERY_STRING'] = $parts[1];
                 parse_str($_SERVER['QUERY_STRING'], $_GET);
             }
@@ -225,10 +224,30 @@
             $uri = implode('/', $this->segments);
 
             if (isset($this->routes[$uri])) {
+                if ($this->routes[$uri] instanceof STC_Route) {
+                    return $this->_set_request(explode('/', $this->routes[$uri]->getAction()));
+                }
                 return $this->_set_request(explode('/', $this->routes[$uri]));
             }
 
+            foreach ($this->routes as $val) {
+                if ($val instanceof STC_Route && $val->getRoute() == $uri) {
+                    return $this->_set_request(explode('/', $val->getAction()));
+                }
+            }
+
+            $routes = STC_Route::getRoutes();
+            foreach ($routes as $name => $value) {
+                if ($value[0] == $uri) {
+                    return $this->_set_request(explode('/', $val[1]));
+                }
+            }
+
             foreach ($this->routes as $key => $val) {
+                if ($val instanceof STC_Route) {
+                    $key = $val->getRoute();
+                    $val = $val->getAction();
+                }
                 $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', str_replace(':str', '[a-zA-Z0-9-_\.]+', $key)));
                 if (preg_match('#^'.$key.'$#', $uri)) {
                     if (strpos($val, '$') !== FALSE && strpos($key, '(') !== FALSE) {

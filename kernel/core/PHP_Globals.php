@@ -179,7 +179,9 @@
         public function delete($id = NULL)
         {
             if (NULL === $id) {
-                unset($this->_);
+                foreach ($this->_ as $key => $val) {
+                    unset($this->_[$key]);
+                }
             }
             else if (is_array($id)) {
                 foreach ($id as $key) {
