@@ -810,6 +810,8 @@
          *
          * @param  string  $ev_name  The name of the event
          * @param  string  $cb_name  The name of the set of callbacks
+         *
+         * @return  bool
          */
         function event_callback_exists( $ev_name, $cb_name ) {
             static $_events;

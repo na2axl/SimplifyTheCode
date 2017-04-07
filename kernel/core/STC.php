@@ -203,6 +203,21 @@
     // Getting the requested page
     // --------------------------------------------------------------------
     try {
+        if ($STC_CNF->item('enable_profiler')) {
+            register_shutdown_function(
+                function() use ($STC_BMK, $STC_CNF, $STC_RTR) {
+                    if (!in_array($STC_RTR->fetch_class(), $STC_CNF->item('profiler_ignore'))) {
+                        echo '<script src="' . $STC_CNF->kernel_url() . '/assets/forp/forp.min.js"></script>'
+                        . '<script>'
+                        . '(new forp.Controller())'
+                            . '.setStack(' . $STC_BMK->dump_profiler(STC_Benchmark::DUMP_JSON) . ')'
+                            . '.run();'
+                        . '</script>';
+                    }
+                }
+            );
+        }
+
         $class   = $STC_RTR->fetch_class();
         $method  = $STC_RTR->fetch_method();
 
@@ -210,6 +225,9 @@
 
         // Mark a benchmark start point
         $STC_BMK->mark('controller_execution_( '.$class.' / '.$method.' )_start');
+
+        // Start the profiler
+        $STC_BMK->start_profiler();
 
         include_once APPPATH . 'ctr' . DIRECTORY_SEPARATOR . $class . '.php';
         $controller = new $class();
@@ -240,6 +258,9 @@
 
             call_user_func_array(array(&$controller, $method), array_slice($STC_RTR->rsegment_array(), 2));
         }
+
+        // Stop the profiler
+        $STC_BMK->stop_profiler();
 
         // Mark a benchmark end point
         $STC_BMK->mark('controller_execution_( ' . $class . ' / ' . $method . ' )_end');

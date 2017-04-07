@@ -94,7 +94,7 @@
                 return $this;
             } elseif (is_array($model)) {
                 foreach ($model as $key => $value) {
-                    is_int($key) ? $this->load($value, '') : $this->load($key, $value);
+                    is_int($key) ? $this->load($value) : $this->load($key, $value);
                 }
                 return $this;
             }
