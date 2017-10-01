@@ -155,5 +155,5 @@
         'xspf'  =>  'application/xspf+xml',
         'z'     =>  'application/x-compress',
         'zip'   =>  array('application/x-zip', 'application/zip', 'application/x-zip-compressed', 'application/s-compressed', 'multipart/x-zip'),
-        'zsh'   =>  'text/x-scriptzsh',
+        'zsh'   =>  'text/x-scriptzsh'
     );
