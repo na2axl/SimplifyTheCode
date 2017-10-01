@@ -964,7 +964,7 @@
                 'img_url'   => '',
                 'img_width' => '150',
                 'img_height'    => '50',
-                'font_path' => make_path(array(BASEPATH, 'fonts', 'Anorexia.ttf')),
+                'font_path' => make_path(array(BASEPATH, 'fonts', 'Anorexia', 'Anorexia.ttf')),
                 'expiration'    => 7200,
                 'word_length'   => 8,
                 'font_size' => 16,
