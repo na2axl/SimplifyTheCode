@@ -82,7 +82,7 @@
      * an error will occur.
      *
      */
-    $config['default_lang'] = 'fr';
+    $config['default_lang'] = 'en';
 
     /*
      *----------------------------------------------------------------------
@@ -106,7 +106,7 @@
 
     /*
      *----------------------------------------------------------------------
-     * Views Caching
+     * VIEWS CACHING
      *----------------------------------------------------------------------
      *
      * Activate/Deactivate the caching of generated views. It's recommended to
@@ -114,6 +114,26 @@
      *
      */
     $config['cache_views'] = FALSE;
+
+    /*
+     *----------------------------------------------------------------------
+     * ENABLE PROFILER
+     *----------------------------------------------------------------------
+     *
+     * Activate/Deactivate the STC profiler.
+     *
+     */
+    $config['enable_profiler'] = FALSE;
+
+    /*
+     *----------------------------------------------------------------------
+     * PROFILER IGNORE
+     *----------------------------------------------------------------------
+     *
+     * An array of controllers' names to ignore while profiling;
+     *
+     */
+    $config['profiler_ignore'] = array();
 
     /*
      *----------------------------------------------------------------------
