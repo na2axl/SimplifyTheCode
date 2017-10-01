@@ -97,11 +97,11 @@
                     trigger_event_callbacks('lang', 'change', array($this->language));
                 }
                 else {
-                    show_error("The language file \"{$this->language}.php\" doesn't contain the variable \"\$lang\"");
+                    show_error("The language file \"{$this->language}.php\" doesn't contain the variable \"\$lang\".");
                 }
             }
             else {
-                show_error("The language file \"{$this->language}.php\" can't be located in \"".APPPATH."ln/\"");
+                show_error("The language file \"{$this->language}.php\" can't be located in \"".APPPATH."ln/\".");
             }
         }
 
