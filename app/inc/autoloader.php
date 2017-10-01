@@ -11,4 +11,4 @@
      * the base controller. The files to autoload have to be stored in the
      * "lib" directory.
      */
-    $autoload['your_id'] = 'path/to/the/file';
+    // $autoload['your_id'] = 'path/to/the/file';
