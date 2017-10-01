@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Centers Technologies
+     * Copyright (c) 2015 - 2016, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
      * THE SOFTWARE.
      *
      * @package     STC
-     * @author      Nana Axel
-     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @author      Nana Axel <ax.lnana@outlook.com>
+     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -45,7 +45,7 @@
      * @package     STC
      * @subpackage  Libraries
      * @category    Template
-     * @author      Nana Axel
+     * @author      Nana Axel <ax.lnana@outlook.com>
      */
     class STC_Template extends Smarty
     {
@@ -94,6 +94,10 @@
             }
         }
 
+        /**
+         * Check if a template exist in the current directory
+         * @param string $file The template file to check the existance
+         */
         public function exists($file)
         {
             $file = str_replace('.tpl', '', $file);
@@ -101,7 +105,7 @@
         }
 
         /**
-         * Template directory changer
+         * Template directory setter
          *
          * @param $folder The subfolder to use as default template directory
          */
@@ -111,6 +115,9 @@
             return $this;
         }
 
+        /**
+         * Template directory getter
+         */
         public function getDirectory()
         {
             return $this->getTemplateDir(0);

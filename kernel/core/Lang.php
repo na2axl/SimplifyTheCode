@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Centers Technologies
+     * Copyright (c) 2015 - 2016, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
      * THE SOFTWARE.
      *
      * @package    STC
-     * @author     Nana Axel
-     * @copyright  Copyright (c) 2015 - 2016, Centers Technologies
+     * @author     Nana Axel <ax.lnana@outlook.com>
+     * @copyright  Copyright (c) 2015 - 2016, Alien Technologies
      * @license    http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -42,7 +42,7 @@
      * @package     STC
      * @subpackage  Libraries
      * @category    Language
-     * @author      Nana Axel
+     * @author      Nana Axel <ax.lnana@outlook.com>
      */
     class STC_Lang
     {
@@ -89,8 +89,8 @@
          */
         private function _load()
         {
-            if (file_exists( APPPATH . 'ln' . DIRECTORY_SEPARATOR . $this->language . '.php' )) {
-                require APPPATH . 'ln' . DIRECTORY_SEPARATOR . $this->language . '.php';
+            if (file_exists( $filepath = make_path(array(APPPATH, 'ln', $this->language . '.php' )) )) {
+                require $filepath;
                 if (isset($lang) && is_array($lang)) {
                     $this->langfile = $lang;
                     unset($lang);

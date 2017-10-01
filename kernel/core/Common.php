@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Centers Technologies
+     * Copyright (c) 2015 - 2016, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
      * THE SOFTWARE.
      *
      * @package     STC
-     * @author      Nana Axel
-     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @author      Nana Axel <ax.lnana@outlook.com>
+     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -44,7 +44,7 @@
      * @package     STC
      * @subpackage  Libraries
      * @category    Common Functions
-     * @author      Nana Axel
+     * @author      Nana Axel <ax.lnana@outlook.com>
      */
 
     if ( ! function_exists('is_ajax_request')) {
@@ -180,8 +180,8 @@
         /**
          * Determines if the current version of PHP is equal to or greater than the supplied value
          *
-         * @param	string  $version  The version of PHP to check
-         * @return	bool	          TRUE if the current version is $version or higher
+         * @param string  $version  The version of PHP to check
+         * @return bool           TRUE if the current version is $version or higher
          */
         function is_php( $version ) {
             static $_is_php;
@@ -317,8 +317,8 @@
          * Keeps track of which libraries have been loaded. This function is
          * called by the load_class() function above
          *
-         * @param	string
-         * @return	array
+         * @param string
+         * @return array
          */
         function &is_loaded( $class = NULL ) {
             static $_is_loaded = array();
@@ -386,8 +386,8 @@
         /**
          * Returns the specified config item
          *
-         * @param	string
-         * @return	mixed
+         * @param string
+         * @return mixed
          */
         function config_item( $item ) {
             static $_config;
@@ -448,7 +448,7 @@
          *
          * Test to see if a request was made from the command line.
          *
-         * @return 	bool
+         * @return  bool
          */
         function is_cli( ) {
             return (PHP_SAPI === 'cli' OR defined('STDIN'));
@@ -465,10 +465,10 @@
          * This function will send the error page directly to the
          * browser and exit.
          *
-         * @param	string $message
-         * @param	int    $status_code
-         * @param	string $heading
-         * @return	void
+         * @param string $message
+         * @param int    $status_code
+         * @param string $heading
+         * @return void
          */
         function show_error( $message, $status_code = 500, $heading = 'An Error Was Encountered' ) {
             static $_error;
@@ -503,8 +503,8 @@
          * However, instead of the standard error template it displays
          * 404 errors.
          *
-         * @param	bool   $log_error
-         * @return	void
+         * @param bool   $log_error
+         * @return void
          */
         function show_404( $log_error = TRUE ) {
             static $_error;
@@ -526,8 +526,8 @@
          * However, instead of the standard error template it displays
          * exception errors.
          *
-         * @param	Exception
-         * @return	void
+         * @param Exception
+         * @return void
          */
         function show_exception(Exception $e) {
             static $_error;
@@ -586,51 +586,51 @@
             if (empty($text)) {
                 is_int($code) OR $code = (int) $code;
                 $stati = array(
-                    100	=> 'Continue',
-                    101	=> 'Switching Protocols',
+                    100 => 'Continue',
+                    101 => 'Switching Protocols',
 
-                    200	=> 'OK',
-                    201	=> 'Created',
-                    202	=> 'Accepted',
-                    203	=> 'Non-Authoritative Information',
-                    204	=> 'No Content',
-                    205	=> 'Reset Content',
-                    206	=> 'Partial Content',
+                    200 => 'OK',
+                    201 => 'Created',
+                    202 => 'Accepted',
+                    203 => 'Non-Authoritative Information',
+                    204 => 'No Content',
+                    205 => 'Reset Content',
+                    206 => 'Partial Content',
 
-                    300	=> 'Multiple Choices',
-                    301	=> 'Moved Permanently',
-                    302	=> 'Found',
-                    303	=> 'See Other',
-                    304	=> 'Not Modified',
-                    305	=> 'Use Proxy',
-                    307	=> 'Temporary Redirect',
+                    300 => 'Multiple Choices',
+                    301 => 'Moved Permanently',
+                    302 => 'Found',
+                    303 => 'See Other',
+                    304 => 'Not Modified',
+                    305 => 'Use Proxy',
+                    307 => 'Temporary Redirect',
 
-                    400	=> 'Bad Request',
-                    401	=> 'Unauthorized',
-                    402	=> 'Payment Required',
-                    403	=> 'Forbidden',
-                    404	=> 'Not Found',
-                    405	=> 'Method Not Allowed',
-                    406	=> 'Not Acceptable',
-                    407	=> 'Proxy Authentication Required',
-                    408	=> 'Request Timeout',
-                    409	=> 'Conflict',
-                    410	=> 'Gone',
-                    411	=> 'Length Required',
-                    412	=> 'Precondition Failed',
-                    413	=> 'Request Entity Too Large',
-                    414	=> 'Request-URI Too Long',
-                    415	=> 'Unsupported Media Type',
-                    416	=> 'Requested Range Not Satisfiable',
-                    417	=> 'Expectation Failed',
-                    422	=> 'Unprocessable Entity',
+                    400 => 'Bad Request',
+                    401 => 'Unauthorized',
+                    402 => 'Payment Required',
+                    403 => 'Forbidden',
+                    404 => 'Not Found',
+                    405 => 'Method Not Allowed',
+                    406 => 'Not Acceptable',
+                    407 => 'Proxy Authentication Required',
+                    408 => 'Request Timeout',
+                    409 => 'Conflict',
+                    410 => 'Gone',
+                    411 => 'Length Required',
+                    412 => 'Precondition Failed',
+                    413 => 'Request Entity Too Large',
+                    414 => 'Request-URI Too Long',
+                    415 => 'Unsupported Media Type',
+                    416 => 'Requested Range Not Satisfiable',
+                    417 => 'Expectation Failed',
+                    422 => 'Unprocessable Entity',
 
-                    500	=> 'Internal Server Error',
-                    501	=> 'Not Implemented',
-                    502	=> 'Bad Gateway',
-                    503	=> 'Service Unavailable',
-                    504	=> 'Gateway Timeout',
-                    505	=> 'HTTP Version Not Supported'
+                    500 => 'Internal Server Error',
+                    501 => 'Not Implemented',
+                    502 => 'Bad Gateway',
+                    503 => 'Service Unavailable',
+                    504 => 'Gateway Timeout',
+                    505 => 'HTTP Version Not Supported'
                 );
 
                 if (array_key_exists($code, $stati)) {
@@ -668,11 +668,11 @@
             // every control character except newline (dec 10),
             // carriage return (dec 13) and horizontal tab (dec 09)
             if ($url_encoded) {
-                $non_displayables[] = '/%0[0-8bcef]/';	// url encoded 00-08, 11, 12, 14, 15
-                $non_displayables[] = '/%1[0-9a-f]/';	// url encoded 16-31
+                $non_displayables[] = '/%0[0-8bcef]/'; // url encoded 00-08, 11, 12, 14, 15
+                $non_displayables[] = '/%1[0-9a-f]/'; // url encoded 16-31
             }
 
-            $non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S';	// 00-08, 11, 12, 14-31, 127
+            $non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S'; // 00-08, 11, 12, 14-31, 127
 
             do {
                 $str = preg_replace($non_displayables, '', $str, -1, $count);

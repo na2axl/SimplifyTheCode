@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Centers Technologies
+     * Copyright (c) 2015 - 2016, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
      * THE SOFTWARE.
      *
      * @package     STC
-     * @author      Nana Axel
-     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @author      Nana Axel <ax.lnana@outlook.com>
+     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -42,7 +42,7 @@
      * @package     STC
      * @subpackage  STC
      * @category    Front-Controller
-     * @author      Nana Axel
+     * @author      Nana Axel <ax.lnana@outlook.com>
      */
 
     /**
@@ -50,7 +50,7 @@
      *
      * @var string
      */
-    define( 'STC_VERSION', '2.1.0' );
+    define( 'STC_VERSION', '2.2.0' );
 
     // --------------------------------------------------------------------
     // Loading user session
@@ -188,16 +188,16 @@
     // --------------------------------------------------------------------
     $STC_UPL =& load_class('Upload');
 
-	/**
-	 * Reference to the STC_Controller method.
-	 *
-	 * Returns current STC instance object
-	 *
-	 * @return STC_Controller
-	 */
-	function &get_controller_instance() {
-		return STC_Controller::get_instance();
-	}
+  	/**
+  	 * Reference to the STC_Controller method.
+  	 *
+  	 * Returns current STC instance object
+  	 *
+  	 * @return STC_Controller
+  	 */
+  	function &get_controller_instance() {
+  	   return STC_Controller::get_instance();
+  	}
 
     // --------------------------------------------------------------------
     // Getting the requested page
@@ -221,10 +221,10 @@
         $class   = $STC_RTR->fetch_class();
         $method  = $STC_RTR->fetch_method();
 
-    	header('Content-Type: text/html; charset='.config_item('charset'));
+    	  header('Content-Type: text/html; charset=' . $STC_CNF->item('charset'));
 
         // Mark a benchmark start point
-        $STC_BMK->mark('controller_execution_( '.$class.' / '.$method.' )_start');
+        $STC_BMK->mark('controller_execution_( ' . $class . ' / ' . $method . ' )_start');
 
         // Start the profiler
         $STC_BMK->start_profiler();
