@@ -79,7 +79,7 @@
          *
          * @param  string  $name    The name of the route
          * @param  string  $route   The route
-         * @param  mixed   $action  Theaction to execute
+         * @param  mixed   $action  The action to execute
          */
         public function __construct($name, $route, $action)
         {
