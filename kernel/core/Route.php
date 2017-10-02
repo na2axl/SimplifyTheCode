@@ -48,7 +48,7 @@
     {
         /**
          * The list of all registered routes
-         * @var  array
+         * @var  array[STC_Route]
          * @access  private
          */
         private static $routes = array();
@@ -83,13 +83,13 @@
          */
         public function __construct($name, $route, $action)
         {
-            if (!array_key_exists($name, self::$routes)) {
-                self::$routes[$name] = array($route, $action);
-            }
-
             $this->name   = $name;
             $this->route  = $route;
             $this->action = $action;
+
+            if (!array_key_exists($name, self::$routes)) {
+                self::$routes[$name] =& $this;
+            }
         }
 
         /**
@@ -141,12 +141,7 @@
         public static function getRouteOf($name, array $params = array())
         {
             if (array_key_exists($name, self::$routes)) {
-                if (count($params) > 0) {
-                    $route = preg_replace('#(\(.+\))#', '%s', self::$routes[$name][0]);
-                    array_unshift($params, $route);
-                    return call_user_func_array('sprintf', $params);
-                }
-                return self::$routes[$name][0];
+                return self::$$routes[$name]->getRoute($params);
             }
 
             return FALSE;
@@ -162,7 +157,7 @@
         public static function getActionOf($name)
         {
             if (array_key_exists($name, self::$routes)) {
-                return self::$routes[$name][1];
+                return self::$routes[$name]->getAction();
             }
 
             return FALSE;
