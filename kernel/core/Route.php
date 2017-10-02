@@ -87,7 +87,7 @@
             $this->route  = $route;
             $this->action = $action;
 
-            if (!array_key_exists($name, self::$routes)) {
+            if ( ! self::exists($name) ) {
                 self::$routes[$name] =& $this;
             }
         }
@@ -112,7 +112,7 @@
          */
         public function getRoute(array $params = array())
         {
-            if (count($params) > 0) {
+            if ( count($params) > 0 ) {
                 $route = preg_replace('#(\(.+\))#', '%s', $this->route);
                 array_unshift($params, $route);
                 return call_user_func_array('sprintf', $params);
@@ -140,7 +140,7 @@
          */
         public static function getRouteOf($name, array $params = array())
         {
-            if (array_key_exists($name, self::$routes)) {
+            if ( self::exists($name) ) {
                 return self::$$routes[$name]->getRoute($params);
             }
 
@@ -156,11 +156,23 @@
          */
         public static function getActionOf($name)
         {
-            if (array_key_exists($name, self::$routes)) {
+            if ( self::exists($name) ) {
                 return self::$routes[$name]->getAction();
             }
 
             return FALSE;
+        }
+
+        /**
+         * Checks if a route exist in registred routes
+         *
+         * @param  string  $name  The name of the route
+         *
+         * @return mixed
+         */
+        public static function exists($name)
+        {
+            return array_key_exists($name, self::$routes);
         }
 
         /**
