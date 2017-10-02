@@ -270,13 +270,11 @@
 
             $this->set_class($segments[0]);
 
-            if (isset($segments[1])) {
-                $this->set_method($segments[1]);
-            }
-            else {
+            if (! isset($segments[1])) {
                 $segments[1] = 'index';
-                $this->set_method($segments[1]);
             }
+
+            $this->set_method($segments[1]);
 
             $this->rsegments = $segments;
         }
