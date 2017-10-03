@@ -121,6 +121,9 @@
             if ( config_item('base_url') !== '' ) {
                 $url = config_item('base_url');
             }
+            elseif ( is_cli() ) {
+                $url = '/';
+            }
             else {
                 $FCPATH_fix = str_replace( '\\', '/', FCPATH ) ;
                 $script_filename_dir = dirname( $_SERVER['SCRIPT_FILENAME'] ) ;
