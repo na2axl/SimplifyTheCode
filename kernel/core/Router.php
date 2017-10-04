@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Alien Technologies
+     * Copyright (c) 2015 - 2017, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
      *
      * @package     STC
      * @author      Nana Axel <ax.lnana@outlook.com>
-     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
+     * @copyright   Copyright (c) 2015 - 2017, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -47,12 +47,35 @@
     class STC_Router
     {
 
+        /**
+         * The base directory to use when the
+         * router search controllers
+         * @var string
+         * @access private
+         */
         private $directory = '';
 
+        /**
+         * The current route that this instance
+         * of STC_Router manage
+         * @var string
+         * @access private
+         */
         private $uri       = '';
 
+        /**
+         * The controller's class name
+         * @var string
+         * @access private
+         */
         private $class     = '';
 
+        /**
+         * The method's name to call with
+         * the controller's instance.
+         * @var string
+         * @access private
+         */
         private $method    = '';
 
         private $keyval    = array();
@@ -63,13 +86,18 @@
 
         private $routes    = array();
 
+        /**
+         * The default controller to use when
+         * the uri is NULL or empty.
+         * @var string
+         * @access private
+         */
         private $default_controller = '';
 
         public function __construct($uri = FALSE)
         {
             if (FALSE !== $uri) {
                 $this->uri = $uri;
-                return;
             }
             else {
                 $this->_fetch_uri();
@@ -81,20 +109,12 @@
 
         public function _set_routing()
         {
-            $segments = array();
-
     		include ( make_path(array(APPPATH, 'inc', 'routes.php')) );
 
             $this->routes = ( ! isset($routes) OR ! is_array($routes)) ? array() : $routes;
     		unset($routes);
 
-            $this->default_controller = ( ! isset($this->routes['default']) OR $this->routes['default'] == '') ? FALSE : strtolower($this->routes['default']);
-
-            if (count($segments) > 0) {
-                return $this->_validate_request($segments);
-            }
-
-            $this->_fetch_uri();
+            $this->default_controller = ( ! isset($this->routes['default']) OR $this->routes['default'] == '') ? FALSE : ($this->routes['default'] instanceof STC_Route ? strtolower($this->routes['default']->getAction()) : strtolower($this->routes['default']));
 
             if ($this->uri == '') {
                 return $this->_set_default_controller();
@@ -126,7 +146,7 @@
 
         private function _fetch_uri()
         {
-            if (php_sapi_name() == 'cli' or defined('STDIN')) {
+            if (is_cli()) {
                 $this->_set_uri($this->_parse_cli_args());
                 return;
             }
@@ -238,8 +258,14 @@
 
             $routes = STC_Route::getRoutes();
             foreach ($routes as $name => $value) {
-                if ($value[0] == $uri) {
-                    return $this->_set_request(explode('/', $val[1]));
+                $key = $value->getRoute();
+                $val = $value->getAction();
+                $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', str_replace(':str', '[a-zA-Z0-9-_\.]+', $key)));
+                if (preg_match('#^'.$key.'$#', $uri)) {
+                    if (strpos($val, '$') !== FALSE && strpos($key, '(') !== FALSE) {
+                        $val = preg_replace('#^'.$key.'$#', $val, $uri);
+                    }
+                    return $this->_set_request(explode('/', $val));
                 }
             }
 
@@ -257,7 +283,7 @@
                 }
             }
 
-            $this->_set_request($this->segments);
+            return $this->_set_request($this->segments);
         }
 
         private function _set_request($segments = array())
@@ -277,6 +303,8 @@
             $this->set_method($segments[1]);
 
             $this->rsegments = $segments;
+
+            return $segments;
         }
 
         private function _validate_request($segments)
@@ -285,28 +313,16 @@
                 return $segments;
             }
 
-            if (file_exists( make_path(array(APPPATH, 'ctr', $segments[0] . '.php')) )) {
+            if (file_exists( make_path(array(APPPATH, 'ctr', $this->fetch_directory(), $segments[0] . '.php')) )) {
                 return $segments;
             }
 
-            if (is_dir(make_path(array(APPPATH, 'ctr', $segments[0])))) {
-                $this->set_directory($segments[0]);
+            if (is_dir(make_path(array(APPPATH, 'ctr', $this->fetch_directory(), $segments[0])))) {
+                $this->set_directory(make_path(array($this->fetch_directory(), $segments[0])));
                 $segments = array_slice($segments, 1);
 
                 if (count($segments) > 0) {
-                    if ( ! file_exists(make_path(array(APPPATH, 'ctr', $this->fetch_directory(), $segments[0] . '.php')))) {
-                        if ( ! empty($this->routes['404_override'])) {
-                            $x = explode('/', $this->routes['404_override']);
-                            $this->set_directory('');
-                            $this->set_class($x[0]);
-                            $this->set_method(isset($x[1]) ? $x[1] : 'index');
-
-                            return $x;
-                        }
-                        else {
-                            show_404();
-                        }
-                    }
+                    return $this->_set_request($segments);
                 }
                 else {
                     if (strpos($this->default_controller, '/') !== FALSE) {
@@ -343,6 +359,10 @@
 
         private function _set_default_controller()
         {
+            if ($this->routes['default'] instanceof STC_Route) {
+                $this->routes['default'] = $this->routes['default']->getAction();
+            }
+
             if (strpos($this->routes['default'], '/') !== FALSE) {
                 $x = explode('/', $this->routes['default']);
 
@@ -484,7 +504,7 @@
 
         public function set_directory($dir)
         {
-            $this->directory = str_replace(array('/', '.'), '', $dir) . '/';
+            $this->directory = trim($dir, '/.\\') . DIRECTORY_SEPARATOR;
         }
 
         public function fetch_class()
@@ -541,6 +561,17 @@
             }
 
             return FALSE;
+        }
+
+        public function redirect_to( $route , $force = FALSE )
+        {
+            if ($route === '/' || $this->exists($route) || $force ) {
+                header ('Location: ' . config_item('base_url') . ltrim($route, '/'));
+                exit();
+            }
+            else {
+                throw new RuntimeException("Cannot redirect to the route: \"{$route}\". The route doesn't exist.");
+            }
         }
 
     }
