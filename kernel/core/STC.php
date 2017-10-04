@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Alien Technologies
+     * Copyright (c) 2015 - 2017, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
      *
      * @package     STC
      * @author      Nana Axel <ax.lnana@outlook.com>
-     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
+     * @copyright   Copyright (c) 2015 - 2017, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -128,6 +128,11 @@
     }
 
     // --------------------------------------------------------------------
+    // Loading Exceptions Manager
+    // --------------------------------------------------------------------
+    $STC_EXP =& load_class('Exceptions');
+
+    // --------------------------------------------------------------------
     // Loading Logger
     // --------------------------------------------------------------------
     $STC_LOG =& load_class('Log');
@@ -223,10 +228,15 @@
             );
         }
 
+        set_error_handler(function($severity, $message, $filepath, $line, $errcontext) use ($STC_EXP) {
+            echo $STC_EXP->show_php_error($severity, $message, $filepath, $line);
+            exit();
+        });
+
         $class   = $STC_RTR->fetch_class();
         $method  = $STC_RTR->fetch_method();
 
-    	  header('Content-Type: text/html; charset=' . $STC_CNF->item('charset'));
+        header('Content-Type: text/html; charset=' . $STC_CNF->item('charset'));
 
         // Mark a benchmark start point
         $STC_BMK->mark('controller_execution_( ' . $class . ' / ' . $method . ' )_start');
@@ -234,7 +244,7 @@
         // Start the profiler
         $STC_BMK->start_profiler();
 
-        include_once APPPATH . 'ctr' . DIRECTORY_SEPARATOR . $class . '.php';
+        include_once make_path( array( APPPATH, 'ctr', $STC_RTR->fetch_directory(), $class . '.php' ) );
         $controller = new $class();
 
         if (method_exists($controller, '_remap')) {
