@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Centers Technologies
+     * Copyright (c) 2015 - 2017, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,8 @@
      * THE SOFTWARE.
      *
      * @package     STC
-     * @author      Nana Axel
-     * @copyright   Copyright (c) 2015 - 2016, Centers Technologies
+     * @author      Nana Axel <ax.lnana@outlook.com>
+     * @copyright   Copyright (c) 2015 - 2017, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -42,7 +42,7 @@
      * @package     STC
      * @subpackage  Libraries
      * @category    Database
-     * @author      Nana Axel
+     * @author      Nana Axel <ax.lnana@outlook.com>
      */
     class STC_OpenDB
     {
@@ -193,8 +193,9 @@
                         $this->where .= $value;
                     }
                     else {
+                        $parts = explode(' ', $value);
                         foreach (self::$operators as $operator) {
-                            if (in_array($operator, explode(' ', $value), TRUE)) {
+                            if (in_array($operator, $parts, TRUE) && $parts[0] === $operator) {
                                 $operand = $operator;
                             }
                         }
@@ -220,7 +221,7 @@
          *
          * @return STC_OpenDB
          */
-        public function order($field, $mode = 'asc')
+        public function order($field, $mode = 'ASC')
         {
             $this->order = " ORDER BY {$field} {$mode} ";
             return $this;
@@ -335,7 +336,14 @@
 
             // Constructing the fields list
             if (is_array($fields)) {
-                $fields = implode(',', $fields);
+                $_fields = "";
+                foreach ($fields as $field => $alias) {
+                    if (is_int($field))
+                        $_fields .= "{$alias}, ";
+                    elseif (is_string($field))
+                        $_fields .= "{$field} AS {$alias}, ";
+                }
+                $fields = trim($_fields, ", ");
             }
 
             // Constructing the SELECT query string
@@ -389,6 +397,22 @@
             }
 
             return $result;
+        }
+
+        /**
+         * Selects the first data result of the query
+         *
+         * @param  mixed  $fields      The fields to select. This value can be an array of fields,
+         *                             or a string of fields (according to the SELECT SQL query syntax).
+         *
+         * @throws STC_OpenDBException
+         *
+         * @return array
+         */
+        public function select_first($fields = '*')
+        {
+            $result = $this->select_array($fields);
+            return $result[0];
         }
 
         /**

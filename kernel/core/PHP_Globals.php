@@ -7,7 +7,7 @@
      *
      * This content is released under the MIT License (MIT)
      *
-     * Copyright (c) 2015 - 2016, Alien Technologies
+     * Copyright (c) 2015 - 2017, Alien Technologies
      *
      * Permission is hereby granted, free of charge, to any person obtaining a copy
      * of this software and assostcated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
      *
      * @package     STC
      * @author      Nana Axel <ax.lnana@outlook.com>
-     * @copyright   Copyright (c) 2015 - 2016, Alien Technologies
+     * @copyright   Copyright (c) 2015 - 2017, Alien Technologies
      * @license     http://opensource.org/licenses/MIT  MIT License
      * @filesource
      */
@@ -96,6 +96,9 @@
 
                     case 'files':
                         return $this->instances['files'] = new STC_PHP_Globals($_FILES);
+
+                    case 'server':
+                        return $this->instances['server'] = new STC_PHP_Globals($_SERVER);
 
                     default:
                         return NULL;
