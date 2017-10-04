@@ -181,4 +181,4 @@
     // And start the fun... :-)
     // --------------------------------------------------------------------
 
-    require_once ( BASEPATH . 'core/STC.php' );
+    require_once ( BASEPATH . 'core' . DIRECTORY_SEPARATOR . 'STC.php' );
