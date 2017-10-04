@@ -29,3 +29,31 @@
     add_event_callback('lang', 'change', function( $language ) {
         // YOUR FUNCTION
     });
+
+    /*
+     *----------------------------------------------------------------------
+     * ERROR OCCURRED CALLBACK
+     *----------------------------------------------------------------------
+     *
+     * This function will be called just after an error occurred.
+     * Note that this function has two parameters which represent the header
+     * of the error and his message body.
+     *
+     */
+    add_event_callback('exceptions', 'error', function ($heading, $message) {
+        // YOUR FUNCTION
+    });
+
+    /*
+     *----------------------------------------------------------------------
+     * EXCEPTION THROWN CALLBACK
+     *----------------------------------------------------------------------
+     *
+     * This function will be called just after an exception has been thrown.
+     * Note that this function has one parameter which represent the exception
+     * thrown.
+     *
+     */
+    add_event_callback('exceptions', 'exception', function( $exception ) {
+        // YOUR FUNCTION
+    });
