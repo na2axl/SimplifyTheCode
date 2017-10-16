@@ -323,6 +323,17 @@
      */
     $config['csrf_regenerate'] = TRUE;
 
+    /**
+     *----------------------------------------------------------------------
+     * DEFAULT EXTENSION FOR views
+     *----------------------------------------------------------------------
+     *
+     * This is the default extension to use for your views. It will be used
+     * when rendering views.
+     *
+     */
+    $config['view_ext'] = 'tpl';
+
     /*
      *----------------------------------------------------------------------
      * CUSTOM CONFIG VALUES
