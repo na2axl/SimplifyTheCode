@@ -95,6 +95,7 @@
                 if (!self::$profiling) {
                     if (function_exists('forp_start')) {
                         forp_start();
+                        trigger_event_callbacks('benchmark', 'profiler_start', array());
                         self::$profiling = true;
                     }
                     else {
@@ -120,6 +121,7 @@
                 if (self::$profiling) {
                     if (function_exists('forp_end')) {
                         forp_end();
+                        trigger_event_callbacks('benchmark', 'profiler_stop', array());
                         self::$profiling = false;
                     }
                     else {
