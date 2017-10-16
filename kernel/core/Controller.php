@@ -44,7 +44,7 @@
      * @category    Base Controller
      * @author      Nana Axel <ax.lnana@outlook.com>
      */
-    class STC_Controller
+    abstract class STC_Controller
     {
 
         /**
@@ -59,22 +59,40 @@
          */
         public function __construct( )
         {
-            // Saving the current instance
-            self::$instance =& $this ;
+            if (NULL === self::$instance) {
+                // Saving the current instance
+                self::$instance =& $this ;
 
-            // Creating global vars
-            foreach (is_loaded() as $var => $class) {
-                $this->$var =& load_class($class);
+                // Autoload application files
+                $this->_autoload();
+
+                // Trigger Controller events
+                $this->events->controller->trigger('init', array(&$this));
+
+                // Logging Message
+                log_message('info', 'Controller Class Initialized');
             }
 
-            // Autoload application files
-            $this->_autoload();
+            return self::$instance;
+        }
 
-            // Trigger Controller events
-            $this->events->controller->trigger('init', array(&$this));
+        /**
+         * @param string $name The core STC class name in lower case
+         * @return mixed
+         */
+        public function __get($name)
+        {
+            $loaded = is_loaded();
 
-            // Logging Message
-            log_message('info', 'Controller Class Initialized');
+            if (array_key_exists($name, $loaded)) {
+                if (!isset($this->$name)) {
+                    log_message('debug', 'Creating STC core class variable in controller: "' . $loaded[$name] . '"');
+                    $this->$name =& load_class($loaded[$name]);
+                }
+                return $this->$name;
+            }
+
+            throw new RuntimeException("Try to access an invalid core STC class: \"{$name}\"");
         }
 
         /**
@@ -97,6 +115,7 @@
             if ( file_exists( $filepath = make_path(array(APPPATH, 'inc', 'autoloader.php')) ) ) {
                 include_once $filepath;
             }
+
             if ( ! isset ( $autoload )) {
                 return FALSE ;
             }
@@ -112,8 +131,11 @@
                 }
                 else {
                     log_message('error', 'Unable to autoload the file: ' . $filepath);
+                    show_error("Unable to autoload the file: $filepath");
                 }
             }
+
+            return TRUE;
         }
 
     }
