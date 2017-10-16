@@ -79,18 +79,22 @@
          *
          * @param string $file The file name of the template to render
          */
-        public function render($file)
+        public function render($file, $ext = NULL)
         {
-            if ($this->exists($file)) {
+            if (NULL === $ext) {
+                $ext = config_item('view_ext');
+            }
+
+            if ($this->exists($file, $ext)) {
                 try {
-                    $file = str_replace('.tpl', '', $file);
-                    $this->display("{$file}.tpl");
+                    $file = str_replace(".{$ext}", '', $file);
+                    $this->display("{$file}.{$ext}");
                 } catch (Exception $e) {
                     show_exception($e);
                 }
             }
             else {
-                throw new RuntimeException("The template file at the path \"{$this->getDirectory()}{$file}.tpl\" doesn't exist.", 1);
+                throw new RuntimeException("The template file at the path \"{$this->getDirectory()}{$file}.{$ext}\" doesn't exist.", 1);
             }
         }
 
@@ -98,10 +102,13 @@
          * Check if a template exist in the current directory
          * @param string $file The template file to check the existance
          */
-        public function exists($file)
+        public function exists($file, $ext = NULL)
         {
-            $file = str_replace('.tpl', '', $file);
-            return $this->templateExists($file . '.tpl');
+            if (NULL === $ext) {
+                $ext = config_item('view_ext');
+            }
+            $file = str_replace(".{$ext}", '', $file);
+            return $this->templateExists($file . ".{$ext}");
         }
 
         /**
