@@ -151,7 +151,6 @@
     // Loading Router
     // --------------------------------------------------------------------
     $STC_RTR =& load_class('Router');
-    $STC_RTR->_set_routing();
 
     // --------------------------------------------------------------------
     // Loading Benchmark
@@ -198,16 +197,21 @@
     // --------------------------------------------------------------------
     $STC_UPL =& load_class('Upload');
 
-  	/**
-  	 * Reference to the STC_Controller method.
-  	 *
-  	 * Returns current STC instance object
-  	 *
-  	 * @return STC_Controller
-  	 */
-  	function &get_controller_instance() {
-  	   return STC_Controller::get_instance();
-  	}
+    // --------------------------------------------------------------------
+    // Loading FileSystem Class
+    // --------------------------------------------------------------------
+    $STC_FSC =& load_class('FileSystem');
+    
+    /**
+     * Reference to the STC_Controller method.
+     *
+     * Returns current STC instance object
+     *
+     * @return STC_Controller
+     */
+    function &get_controller_instance() {
+       return STC_Controller::get_instance();
+    }
 
     // --------------------------------------------------------------------
     // Getting the requested page
@@ -230,7 +234,7 @@
 
         set_error_handler(function($severity, $message, $filepath, $line, $errcontext) use ($STC_EXP) {
             echo $STC_EXP->show_php_error($severity, $message, $filepath, $line);
-            exit();
+            exit(1); // EXIT_ERROR
         });
 
         $class   = $STC_RTR->fetch_class();
