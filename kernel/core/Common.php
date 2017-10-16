@@ -311,6 +311,7 @@
             is_loaded($class);
 
             $_classes[$class] = (NULL !== $param) ? new $name($param) : new $name();
+
             return $_classes[$class];
         }
     }
@@ -759,7 +760,7 @@
          * @param  string  $cb_name   The name of the set of callbacks
          * @param  array   $cb_param  The parameters to use in callbacks
          */
-        function trigger_event_callbacks( $ev_name, $cb_name, $cb_param ) {
+        function trigger_event_callbacks( $ev_name, $cb_name = NULL, array $cb_param = array() ) {
             static $_events;
 
             if ($_events === NULL) {
