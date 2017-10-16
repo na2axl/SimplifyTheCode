@@ -60,8 +60,9 @@
          * of STC_Router manage
          * @var string
          * @access private
+         * @static
          */
-        private $uri       = '';
+        private static $uri = '';
 
         /**
          * The controller's class name
@@ -78,12 +79,29 @@
          */
         private $method    = '';
 
+
         private $keyval    = array();
 
+        /**
+         * The non routed array of segments.
+         * @var array
+         * @access private
+         */
         private $segments  = array();
 
+        /**
+         * The routed array of segments.
+         * @var array
+         * @access private
+         */
         private $rsegments = array();
 
+        /**
+         * The array of user-defined routes
+         * @see app/inc/routes.php
+         * @var array
+         * @access private
+         */
         private $routes    = array();
 
         /**
@@ -94,30 +112,36 @@
          */
         private $default_controller = '';
 
+        /**
+         * Router class constructor
+         */
         public function __construct($uri = FALSE)
         {
             if (FALSE !== $uri) {
-                $this->uri = $uri;
+                self::$uri = $uri;
             }
             else {
                 $this->_fetch_uri();
             }
 
+            $this->_set_routing();
+
             // Logging Message
             log_message('info', 'Router Class Initialized');
         }
 
-        public function _set_routing()
+        private function _set_routing()
         {
-    		include ( make_path(array(APPPATH, 'inc', 'routes.php')) );
+            include ( make_path(array(APPPATH, 'inc', 'routes.php')) );
 
             $this->routes = ( ! isset($routes) OR ! is_array($routes)) ? array() : $routes;
-    		unset($routes);
+            unset($routes);
 
             $this->default_controller = ( ! isset($this->routes['default']) OR $this->routes['default'] == '') ? FALSE : ($this->routes['default'] instanceof STC_Route ? strtolower($this->routes['default']->getAction()) : strtolower($this->routes['default']));
 
-            if ($this->uri == '') {
-                return $this->_set_default_controller();
+            if (self::$uri == '') {
+                $this->_set_default_controller();
+                return ;
             }
 
             $this->_explode_segments();
@@ -125,9 +149,9 @@
             $this->_reindex_segments();
         }
 
-        public function _explode_segments()
+        private function _explode_segments()
         {
-            foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", $this->uri)) as $val) {
+            foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", self::$uri)) as $val) {
                 $val = trim($this->_filter_uri($val));
 
                 if ($val != '') {
@@ -138,8 +162,8 @@
 
         public function _filter_uri($str)
         {
-            $bad	= array('$',		'(',		')',		'%28',		'%29');
-            $good	= array('&#36;',	'&#40;',	'&#41;',	'&#40;',	'&#41;');
+            $bad    = array('$',        '(',        ')',        '%28',        '%29');
+            $good   = array('&#36;',    '&#40;',    '&#41;',    '&#40;',    '&#41;');
 
             return str_replace($bad, $good, $str);
         }
@@ -173,14 +197,14 @@
                 return;
             }
 
-            $this->uri = '';
+            self::$uri = '';
             return;
         }
 
         public function _set_uri($string)
         {
             $string = remove_invisible_characters($string, FALSE);
-            $this->uri = ($string == '/') ? '' : $string;
+            self::$uri = ($string == '/') ? '' : $string;
         }
 
         private function _detect_uri()
@@ -229,14 +253,19 @@
             return $args ? '/' . implode('/', $args) : '';
         }
 
+        public static function uri()
+        {
+            return self::$uri;
+        }
+
         public function get_uri()
         {
-            return $this->uri;
+            return self::uri();
         }
 
         private function _uri_to_segments()
         {
-            $this->segments = explode('/', $this->uri);
+            $this->segments = explode('/', self::$uri);
         }
 
         private function _parse_routes()
@@ -291,7 +320,8 @@
             $segments = $this->_validate_request($segments);
 
             if (count($segments) == 0) {
-                return $this->_set_default_controller();
+                $this->_set_default_controller();
+                return ;
             }
 
             $this->set_class($segments[0]);
