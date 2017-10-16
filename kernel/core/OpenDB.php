@@ -130,10 +130,11 @@
         /**
          * Class __constructor
          *
-         * @param  string  $datatbase  The name of the database
          * @param  string  $table      The name of the table
-         *
-         * @return void
+         * @param  string  $database   The name of the database
+         * @param  string  $server     The name of the server
+         * @param  string  $user       The username for your database connection
+         * @param  string  $pass       The password associated to the username
          */
         public function __construct($table = '', $database = NULL, $server = NULL, $user = NULL, $pass = NULL)
         {
@@ -244,8 +245,6 @@
         /**
          * Connect to the database / Instanciate PDO
          *
-         * @return void
-         *
          * @throws PDOException
          */
         private function _instanciate()
@@ -267,45 +266,7 @@
          */
         protected function _parse_where_clause($conditions)
         {
-            $conds     = '';
-            $count_or  = 0;
-            $count_and = 0;
-            $operand   = '=';
-
-            if (is_array($conditions)) {
-                foreach ($conditions as $key => $value) {
-                    if (is_array($value)) {
-                        $conds .= ($count_or != 0) ? ' OR ' : '';
-                        $count_and = 0;
-                        foreach ($value as $field => $data) {
-                            $conds .= ($count_and != 0) ? ' AND ' : '';
-                            foreach (self::$operators as $operator) {
-                                if (FALSE !== strpos($condition, $operator) || in_array($operator, explode(' ', $condition), TRUE) || in_array($operator, str_split($condition), TRUE)) {
-                                    $operand = $operator;
-                                    break;
-                                }
-                            }
-                            $conds .= $field . $operand . $data;
-                            $count_and++;
-                        }
-                        $count_or++;
-                    } else {
-                        $conds .= ($count_and != 0) ? ' AND ' : '';
-                        foreach (self::$operators as $operator) {
-                            if (FALSE !== strpos($condition, $operator) || in_array($operator, explode(' ', $condition), TRUE) || in_array($operator, str_split($condition), TRUE)) {
-                                $operand = $operator;
-                                break;
-                            }
-                        }
-                        $conds .= $key . $operand . $value;
-                        $count_and++;
-                    }
-                }
-            } else {
-                $conds = $conditions;
-            }
-
-            return $conds;
+            throw new Exception("Deprecated. Use STC_OpenDB::where() instead");
         }
 
         /**
@@ -331,9 +292,6 @@
          */
         protected function _select($fields)
         {
-            $count = 0;
-            $datas = array();
-
             // Constructing the fields list
             if (is_array($fields)) {
                 $_fields = "";
@@ -451,14 +409,11 @@
         private function _join($fields, $joinparams)
         {
             $jcond = '';
-            $count = 0;
-            $datas = array();
 
             if (is_array($fields)) {
                 $fields = implode(',', $fields);
             }
 
-            $count = 0;
             if (is_array($joinparams)) {
                 foreach ($joinparams as $joinparam) {
                     $jcond .= ' ' . $joinparam['side'] . ' JOIN ' . $joinparam['table'] . ' ON ' . $joinparam['cond'] . ' ';
@@ -552,9 +507,6 @@
          */
         public function count($fields = '*')
         {
-            $count = 0;
-            $datas = array();
-
             if (is_array($fields)) {
                 $field = implode(',', $fields);
             }
@@ -621,7 +573,6 @@
         public function update($fieldsAndValues)
         {
             $updates = '';
-            $conds   = '';
             $count   = count($fieldsAndValues);
 
             if (is_array($fieldsAndValues)) {
@@ -632,9 +583,9 @@
                     $updates .= ($count != 0) ? ', ' : '';
                 }
             }
-            else $updates = $fieldsAndValues;
-
-            $count   = 0;
+            else {
+                $updates = $fieldsAndValues;
+            }
 
             $query = 'UPDATE ' . $this->table . ' SET ' . $updates . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '');
 
@@ -658,9 +609,6 @@
          */
         public function delete()
         {
-            $conds   = '';
-            $count   = 0;
-
             $query = 'DELETE FROM ' . $this->table . ((NULL !== $this->where) ? ' WHERE ' . $this->where : '');
 
             $getFieldsDatas = $this->pdo->prepare($query);
