@@ -27,10 +27,10 @@
      * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
      * THE SOFTWARE.
      *
-     * @package	STC
-     * @author	Nana Axel <ax.lnana@outlook.com>
-     * @copyright	Copyright (c) 2015 - 2017, Alien Technologies
-     * @license	http://opensource.org/licenses/MIT	MIT License
+     * @package    STC
+     * @author     Nana Axel <ax.lnana@outlook.com>
+     * @copyright  Copyright (c) 2015 - 2017, Alien Technologies
+     * @license    http://opensource.org/licenses/MIT    MIT License
      * @filesource
      */
 
@@ -133,7 +133,7 @@
     define( 'FCPATH', dirname(__FILE__).DIRECTORY_SEPARATOR );
 
     // Smarty folder directory
-    define( 'SMARTY_DIR', BASEPATH . 'lib/Smarty/' );
+    define( 'SMARTY_DIR', BASEPATH . 'lib' . DIRECTORY_SEPARATOR . 'Smarty' . DIRECTORY_SEPARATOR );
 
     // Application folder path
     if (is_dir($APP_PATH)) {
@@ -144,36 +144,36 @@
     }
     else {
         if (! is_dir(FCPATH.$APP_PATH.DIRECTORY_SEPARATOR)) {
-			header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
-			echo 'Your application folder path does not appear to be set correctly. Please open the following file and correct this: '.SELF;
-			exit(3); // EXIT_CONFIG
+            header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
+            echo 'Your application folder path does not appear to be set correctly. Please open the following file and correct this: '.SELF;
+            exit(3); // EXIT_CONFIG
         }
         define( 'APPPATH', FCPATH.$APP_PATH.DIRECTORY_SEPARATOR );
     }
 
-	// Views folder path
-	if (! is_dir($VIEW_PATH)) {
-		if (! empty($VIEW_PATH) && is_dir(APPPATH.$VIEW_PATH.DIRECTORY_SEPARATOR)) {
-			$VIEW_PATH = APPPATH.$VIEW_PATH;
-		}
-		elseif (! is_dir(APPPATH.'views'.DIRECTORY_SEPARATOR)) {
-			header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
-			echo 'Your view folder path does not appear to be set correctly. Please open the following file and correct this: '.SELF;
-			exit(3); // EXIT_CONFIG
-		}
-		else {
-			$VIEW_PATH = APPPATH.'views';
-		}
-	}
+    // Views folder path
+    if (! is_dir($VIEW_PATH)) {
+        if (! empty($VIEW_PATH) && is_dir(APPPATH.$VIEW_PATH.DIRECTORY_SEPARATOR)) {
+            $VIEW_PATH = APPPATH.$VIEW_PATH;
+        }
+        elseif (! is_dir(APPPATH.'views'.DIRECTORY_SEPARATOR)) {
+            header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
+            echo 'Your view folder path does not appear to be set correctly. Please open the following file and correct this: '.SELF;
+            exit(3); // EXIT_CONFIG
+        }
+        else {
+            $VIEW_PATH = APPPATH.'views';
+        }
+    }
 
-	if (($path = realpath($VIEW_PATH)) !== FALSE) {
-		$VIEW_PATH = $path.DIRECTORY_SEPARATOR;
-	}
-	else {
-		$VIEW_PATH = rtrim($VIEW_PATH, '/\\').DIRECTORY_SEPARATOR;
-	}
+    if (($path = realpath($VIEW_PATH)) !== FALSE) {
+        $VIEW_PATH = $path.DIRECTORY_SEPARATOR;
+    }
+    else {
+        $VIEW_PATH = rtrim($VIEW_PATH, '/\\').DIRECTORY_SEPARATOR;
+    }
 
-	define('VIEWPATH', $VIEW_PATH);
+    define('VIEWPATH', $VIEW_PATH);
 
     // --------------------------------------------------------------------
     // LOADING THE BOOTSTRAP FILE
