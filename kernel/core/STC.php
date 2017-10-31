@@ -50,7 +50,7 @@
      *
      * @var string
      */
-    define( 'STC_VERSION', '2.5.0' );
+    define( 'STC_VERSION', '2.6.0' );
 
     // --------------------------------------------------------------------
     // Loading user session
