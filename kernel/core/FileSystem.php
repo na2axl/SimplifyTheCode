@@ -54,28 +54,28 @@
         const TMP_DIR = FCPATH . '/tmp';
 
         /**
-         * Choose to output the real filepath
+         * Choose to output the real file path
          *
          * @const int
          */
         const REAL_PATH = 1;
 
         /**
-         * Choose to output the internal filepath
+         * Choose to output the internal file path
          *
          * @const int
          */
         const INTERNAL_PATH = 2;
 
         /**
-         * Choose to output the external filepath
+         * Choose to output the external file path
          *
          * @const int
          */
         const EXTERNAL_PATH = 3;
 
         /**
-         * Choose to output the external filepath
+         * Choose to output the external file path
          *
          * @const int
          */
@@ -87,7 +87,7 @@
          * @var string
          * @access protected
          */
-        protected $rootpath = '';
+        protected $rootPath = '';
 
         /**
          * The current working directory
@@ -98,9 +98,9 @@
         protected $workingDir = '';
 
         /**
-         * Aliasies
+         * Aliases
          *
-         * @var string
+         * @var array
          * @access protected
          */
         protected $aliases = array();
@@ -112,38 +112,43 @@
          * the default working directory,
          * and defaults aliases.
          *
-         * @return void
+         * @param string $rootPath The root path of the file system.
          */
-        public function __construct($rootpath = FALSE) {
-            if ($rootpath === FALSE) {
-                $this->setRootpath(FCPATH);
+        public function __construct($rootPath = NULL) {
+            if ($rootPath === FALSE) {
+                $this->setRootPath(FCPATH);
             }
             else {
-                $this->setRootpath($this->cleanPath($rootpath));
+                $this->setRootPath($this->cleanPath($rootPath));
             }
 
             $this->setWorkingDir('/');
-
-            return ;
         }
 
         /**
-         * Gets the value of rootpath
+         * Gets the value of root path
          *
          * @return string
          */
-        public function rootpath() {
-            return $this->rootpath;
+        public function rootPath() {
+            return $this->rootPath;
         }
 
-        public function setRootpath($rootpath) {
-            $this->rootpath = $this->cleanPath($rootpath);
+        /**
+         * Changes the current root path
+         *
+         * @param string $rootPath The new root path
+         *
+         * @return void
+         */
+        public function setRootPath($rootPath) {
+            $this->rootPath = $this->cleanPath($rootPath);
         }
 
         /**
          * Set the current working directory
          *
-         * @param string The path to the directory
+         * @param string $workingDir The path to the directory
          *
          * @return void
          */
@@ -152,7 +157,7 @@
         }
 
         /**
-         * Get the current working directory
+         * Gets the current working directory
          *
          * @return string
          */
@@ -161,11 +166,11 @@
         }
 
         /**
-         * Get the aliases
+         * Gets the aliases
          *
          * @return array
          */
-        public function getaliases() {
+        public function getAliases() {
             return $this->aliases;
         }
 
@@ -297,7 +302,7 @@
          * Delete the file
          *
          * @param string $path      The path to the file to delete
-         * @param boolean   $recursive Define if we have to delete all subfiles
+         * @param bool   $recursive Define if we have to delete all subfiles
          *
          * @throws RuntimeException
          *
@@ -387,7 +392,7 @@
          * @param string $path     The path of the file to copy
          * @param string $new_path The path of the destination
          *
-         * @throws RuntimeException
+         * @throws RuntimeException When the file can't be copied
          *
          * @return boolean
          */
@@ -406,13 +411,22 @@
             $sourceInternalPath = $this->toInternalPath($path);
 
             if ($this->isDir($sourceInternalPath)) {
+
                 if (!$this->exists($new_path)) {
                     $this->mkdir($new_path);
                 }
+
                 $subfiles = $this->readDir($path);
+                $res = FALSE;
+
                 foreach ($subfiles as $fileToCopyName => $fileToCopyPath) {
-                    return $this->copy("{$path}/{$fileToCopyName}", "{$new_path}/{$fileToCopyName}");
+                    $res = $this->copy("{$path}/{$fileToCopyName}", "{$new_path}/{$fileToCopyName}");
+
+                    if (!$res)
+                        break;
                 }
+
+                return $res;
             }
             else {
                 if (copy($sourceInternalPath, $destInternalPath) === FALSE) {
@@ -422,7 +436,6 @@
                     return TRUE;
                 }
             }
-
         }
 
         /**
@@ -431,8 +444,9 @@
          * @param object $file The file to upload.
          * @param string $path The new file path.
          *
-         * @return boolean If the file is sucessfully uploaded.
+         * @return boolean If the file is successfully uploaded.
          */
+        // TODO: Finish this method
         public function upload($file, $path) {
             $internalPath = $this->toInternalPath($path);
 
@@ -442,6 +456,8 @@
             else {
                 $filename = $this->basename($internalPath);
             }
+
+            return FALSE;
         }
 
         /**
@@ -476,7 +492,7 @@
          * Create a new directory
          *
          * @param string $path      The path of the new directory
-         * @param boolean   $recursive Define if we have to create all parent directories
+         * @param bool   $recursive Define if we have to create all parent directories
          *
          * @throws RuntimeException
          *
@@ -751,6 +767,8 @@
 
                     return $dirname;
 
+                default:
+                    return "unknown";
             }
         }
 
@@ -916,10 +934,10 @@
                 return $internalPath;
             }
 
-            if (substr($internalPath, 0, strlen($this->rootpath())) == $this->rootpath()) {
-                $internalPath = str_replace($this->rootpath(), './', $internalPath);
+            if (substr($internalPath, 0, strlen($this->rootPath())) == $this->rootPath()) {
+                $internalPath = str_replace($this->rootPath(), './', $internalPath);
             } else {
-                $realRootPath = realpath($this->rootpath());
+                $realRootPath = realpath($this->rootPath());
                 if (substr($internalPath, 0, strlen($realRootPath)) == $realRootPath) {
                     $internalPath = substr($internalPath, strlen($realRootPath));
                 }
@@ -947,7 +965,7 @@
             } while($appliedAliasesNbr > 0 && $nbrTurns <= $maxNbrTurns);
 
             // Prepend the root path
-            $rootPath = $this->rootpath();
+            $rootPath = $this->rootPath();
             if (!empty($rootPath)) {
                 $internalPath = make_path(array($rootPath, $internalPath));
             }
@@ -969,10 +987,10 @@
                 return $externalPath;
             }
 
-            if (substr($externalPath, 0, strlen($this->rootpath())) == $this->rootpath()) {
-                $externalPath = substr($externalPath, strlen($this->rootpath()));
+            if (substr($externalPath, 0, strlen($this->rootPath())) == $this->rootPath()) {
+                $externalPath = substr($externalPath, strlen($this->rootPath()));
             } else {
-                $realRootPath = realpath($this->rootpath());
+                $realRootPath = realpath($this->rootPath());
                 if (substr($externalPath, 0, strlen($realRootPath)) == $realRootPath) {
                     $externalPath = substr($externalPath, strlen($realRootPath));
                 }
@@ -1017,10 +1035,10 @@
                 return $externalPath;
             }
 
-            if (substr($externalPath, 0, strlen($this->rootpath())) == $this->rootpath()) {
-                $externalPath = substr($externalPath, strlen($this->rootpath()));
+            if (substr($externalPath, 0, strlen($this->rootPath())) == $this->rootPath()) {
+                $externalPath = substr($externalPath, strlen($this->rootPath()));
             } else {
-                $realRootPath = realpath($this->rootpath());
+                $realRootPath = realpath($this->rootPath());
                 if (substr($externalPath, 0, strlen($realRootPath)) == $realRootPath) {
                     $externalPath = substr($externalPath, strlen($realRootPath));
                 }
