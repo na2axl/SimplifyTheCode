@@ -1,3 +1,11 @@
 app/views/compiled/*.php
 app/views/caches/*.php
 app/logs/*
+
+# Jetbrains files
+.idea/
+
+# Jekyll files
+.sass-cache/
+_posts/
+_site/
