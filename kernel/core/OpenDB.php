@@ -370,7 +370,11 @@
         public function select_first($fields = '*')
         {
             $result = $this->select_array($fields);
-            return $result[0];
+
+            if (count($result))
+                return $result[0];
+
+            return NULL;
         }
 
         /**
