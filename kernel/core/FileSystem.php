@@ -622,7 +622,7 @@
         }
 
         /**
-         * Get the file's size in octects
+         * Get the file's size in octets
          *
          * @param string $path The path to the file
          *
@@ -662,38 +662,25 @@
         public function mimetype($path) {
             $fileExtension = $this->extension($path);
 
-            switch ($fileExtension) {
-                case 'css':
-                    return 'text/css';
-                case 'js':
-                    return 'text/javascript';
-                case 'html':
-                    return 'text/html';
-            }
+            $mimes =& get_mimes();
 
-            $htaccessPath = '/.htaccess';
-            if ($this->exists($htaccessPath)) {
-                $contents = $this->read($htaccessPath);
-                $lines = explode("\n", $contents);
+            foreach ($mimes as $extension => $mime) {
+                if ($extension === $fileExtension) {
+                    if (is_array($mime))
+                        return $mime[0];
 
-                foreach ($lines as $line) {
-                    $line = trim($line);
-                    if (stripos($line, 'AddType ') === 0) {
-                        $data = explode(' ', $line);
-                        if ($data[2] == $fileExtension) {
-                            return $data[1];
-                        }
-                    }
+                    return $mime;
                 }
             }
 
-            if (!class_exists('finfo')) {
+            if (!class_exists('finfo'))
                 return 'application/octet-stream';
-            }
+
             $finfo = new \finfo(FILEINFO_MIME);
-            if (!$finfo) {
+
+            if (!$finfo)
                 return 'application/octet-stream';
-            }
+
             return $finfo->file($this->toInternalPath($path));
         }
 
