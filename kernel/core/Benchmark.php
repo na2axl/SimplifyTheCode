@@ -138,8 +138,9 @@
 
         /**
          * Dump the profiler results.
-         * @return  array  If $dump_type is Benchmark::DUMP_ARRAY
-         * @return  string  If $dump_type is Benchmark::DUMP_JSON
+         * @param int $dump_type The type of the profiler results.
+         *                       Can be STC_Benchmark::DUMP_JSON or STC_Benchmark::DUMP_ARRAY.
+         * @return array|string
          */
         public function dump_profiler( $dump_type = NULL )
         {
@@ -164,7 +165,7 @@
          * @param  string  $point1    The name of the first benchmark point
          * @param  string  $point2    The name of the second benchmark point
          * @param  int     $decimals
-         * @return mixed
+         * @return int
          */
         public function elapsed_time( $point1 = NULL, $point2 = NULL, $decimals = 4 )
         {
@@ -179,7 +180,7 @@
             list( $sm, $ss ) = explode( ' ', self::$marker[$point1]['e'] ) ;
             list( $em, $es ) = explode( ' ', self::$marker[$point2]['e'] ) ;
 
-            return number_format( ( $em + $es ) - ( $sm + $ss ), $decimals ) ;
+            return (int) number_format( ( $em + $es ) - ( $sm + $ss ), $decimals ) ;
         }
 
         /**
@@ -187,7 +188,7 @@
          * @param  string  $point1    The name of the first benchmark point
          * @param  string  $point2    The name of the second benchmark point
          * @param  int     $decimals
-         * @return mixed
+         * @return int
          */
         public function memory_usage( $point1 = NULL, $point2 = NULL, $decimals = 4 )
         {
@@ -202,7 +203,7 @@
             $sm = self::$marker[$point1]['m'] ;
             $em = self::$marker[$point2]['m'] ;
 
-            return number_format( $em - $sm , $decimals ) ;
+            return (int) number_format( $em - $sm , $decimals ) ;
         }
 
     }
