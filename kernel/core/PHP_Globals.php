@@ -50,21 +50,22 @@
         /**
          * The current used variable
          *
-         * @var string
+         * @var array
          * @access protected
          */
         protected $_;
 
         /**
-         * The current used variable
+         * The list of instances
          *
          * @var array
          * @access protected
          */
-        protected $instances = array();
+        protected static $INSTANCES = array();
 
         /**
          * Class constructor
+         * @param array $_ The PHP global to handle.
          */
         public function __construct(&$_ = NULL)
         {
@@ -72,33 +73,34 @@
         }
 
         /**
-         *
+         * @param string $name The PHP global variable name
+         * @return null|STC_PHP_Globals
          */
         public function __get($name)
         {
             $name = strtolower($name);
-            if (array_key_exists($name, $this->instances)) {
-                return $this->instances[$name];
+            if (array_key_exists($name, self::$INSTANCES)) {
+                return self::$INSTANCES[$name];
             }
             else {
                 switch ($name) {
                     case 'get':
-                        return $this->instances['get'] = new STC_PHP_Globals($_GET);
+                        return self::$INSTANCES['get'] = new STC_PHP_Globals($_GET);
 
                     case 'post':
-                        return $this->instances['post'] = new STC_PHP_Globals($_POST);
+                        return self::$INSTANCES['post'] = new STC_PHP_Globals($_POST);
 
                     case 'cookie':
-                        return $this->instances['cookie'] = new STC_PHP_Globals($_COOKIE);
+                        return self::$INSTANCES['cookie'] = new STC_PHP_Globals($_COOKIE);
 
                     case 'session':
-                        return $this->instances['session'] = new STC_PHP_Globals($_SESSION);
+                        return self::$INSTANCES['session'] = new STC_PHP_Globals($_SESSION);
 
                     case 'files':
-                        return $this->instances['files'] = new STC_PHP_Globals($_FILES);
+                        return self::$INSTANCES['files'] = new STC_PHP_Globals($_FILES);
 
                     case 'server':
-                        return $this->instances['server'] = new STC_PHP_Globals($_SERVER);
+                        return self::$INSTANCES['server'] = new STC_PHP_Globals($_SERVER);
 
                     default:
                         return NULL;
