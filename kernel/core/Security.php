@@ -955,7 +955,7 @@
         /**
          * Generate a captcha image
          *
-         * @return   array
+         * @return   array|bool
          */
         public function generate_captcha($data = '', $img_path = '', $img_url = '', $font_path = '') {
             $defaults = array(
