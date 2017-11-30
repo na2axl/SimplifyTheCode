@@ -4277,7 +4277,7 @@ var GRID = function () {
                 }
             }
         }
-	};
+	}
 
     var old = $.grid.tooltip || $.fn.tooltip;
 
